@@ -1,11 +1,14 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+
+
 
 app = Flask(__name__)
-
+CORS(app)
 # Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    'postgresql://doadmin:AVNS_UIvkdQ1sd7yQvtkLK8e@db-postgresql-sfo2-35206-do-user-17895402-0.h.db.ondigitalocean.com:25060/defaultdb?sslmode=require'
+    'postgresql+psycopg2://doadmin:AVNS_UIvkdQ1sd7yQvtkLK8e@db-postgresql-sfo2-35206-do-user-17895402-0.h.db.ondigitalocean.com:25060/defaultdb?sslmode=require'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -279,6 +282,38 @@ def getAllvets():
         'Username': vet.username,
         'Password': vet.password
     } for vet in vets])
+
+
+
+@app.route('/animal-list', methods=['GET'])
+def animal_list():
+    vet_id = request.args.get('vet_id', type=int)
+
+    if not vet_id:
+        return jsonify({"error": "vet_id is required"}), 400
+
+    # Filter animals based on the vet_id
+    animals = Animal.query.with_entities(
+        Animal.animal_id, Animal.name, Animal.last_name, Animal.species, Animal.dob
+    ).filter(Animal.vet_id == vet_id).all()
+
+    # Transform data into JSON format
+    data = [
+        {
+            "animal_id": animal.animal_id,
+            "name": animal.name,
+            "last_name": animal.last_name,
+            "species": animal.species,
+            "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None
+        }
+        for animal in animals
+    ]
+
+    return jsonify(data)
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Display</title>
+    <link rel="stylesheet" href="history.css">
+</head>
+<body>
+    <div class="history-container">
+        <div class="history-header">
+            Animal History Records
+        </div>
+
+        <!-- Search bar  -->
+        <div style="padding: 10px;">
+            
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by Name, Species, or Last Name..."
+                style="padding: 5px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"
+            />
+        </div>
+
+        <!-- Animal Table structure -->
+        <div class="history-content">
+            <table id="animalTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Last Name</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Species</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Date of Birth</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Fetch data and populate the table
+        async function fetchAnimalList(vet_id = 1) {
+            try {
+                const response = await fetch(`http://localhost:5000/animal-list?vet_id=${vet_id}`);
+                const data = await response.json();
+
+                const tableBody = document.querySelector("#animalTable tbody");
+
+                // Clear any existing rows
+                tableBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    const noRecordsRow = document.createElement('tr');
+                    noRecordsRow.innerHTML = `
+                        <td colspan="5" style="text-align: center; padding: 10px;">No records found.</td>
+                    `;
+                    tableBody.appendChild(noRecordsRow);
+                    return;
+                }
+
+                // Populate rows for each animal
+                data.forEach(animal => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="border: 1px solid #ddd; padding: 8px;">${animal.animal_id}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${animal.name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${animal.last_name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${animal.species}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${animal.dob || 'Unknown'}</td>
+                    `;
+
+                    // Add a data attribute for search filtering
+                    row.dataset.animal_id = animal.animal_id.toString();
+                    row.dataset.name = animal.name.toLowerCase();
+                    row.dataset.lastName = animal.last_name.toLowerCase();
+                    row.dataset.species = animal.species.toLowerCase();
+
+                    tableBody.appendChild(row);
+                });
+
+                // Attach the search filter
+                setupSearchFilter();
+            } catch (error) {
+                console.error('Error fetching animal list:', error);
+                const tableBody = document.querySelector("#animalTable tbody");
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 10px; color: red;">
+                            Error loading records. Please try again later.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Setup search functionality
+        function setupSearchFilter() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', () => {
+                const filter = searchInput.value.toLowerCase();
+                const rows = document.querySelectorAll('#animalTable tbody tr');
+
+                rows.forEach(row => {
+                    // Check if the search term matches any column value
+                    const matches = row.dataset.animal_id.includes(filter) ||
+                                    row.dataset.name.includes(filter) ||
+                                    row.dataset.lastName.includes(filter) ||
+                                    row.dataset.species.includes(filter);
+
+                    // Show or hide rows based on the match
+                    row.style.display = matches ? '' : 'none';
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAnimalList(1); // Call the function with vet_id = 1
+        });
+
+    </script>
+</body>
+</html>
