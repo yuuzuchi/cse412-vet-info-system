@@ -8,11 +8,12 @@
 </head>
 <body>
   <div class="dashboard-container">
-    <!-- Left -->
     <aside class="sidebar">
       <h2 class="logo">Dashboard</h2>
       <ul class="menu">
         <li class="active">Home</li>
+        
+        
         <li><a href="history.html" class="menu-link">History</a></li>
         <li><a href="medical.html" class="menu-link">Medical</a></li>
         <li><a href="vaccination.html" class="menu-link">Vaccination</a></li>
@@ -22,13 +23,60 @@
       </div>
     </aside>
 
-    <!-- Right -->
+    <div id="addAnimalModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2>Add New Animal</h2>
+        <form id="addAnimalForm">
+  
+          <div class="form-section">
+            <h3>Pet Information</h3>
+            <div class="form-group">
+              <label for="petName">Pet Name:</label>
+              <input type="text" id="petName" required>
+            </div>
+            <div class="form-group">
+              <label for="petLastName">Pet Last Name:</label>
+              <input type="text" id="petLastName" required>
+            </div>
+            <div class="form-group">
+              <label for="species">Species:</label>
+              <select id="species" required>
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+                <option value="Bird">Bird</option>
+                <option value="Reptile">Reptile</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dob">Date of Birth:</label>
+              <input type="date" id="dob">
+            </div>
+            <div class="form-group">
+              <label for="breed">Breed:</label>
+              <input type="text" id="breed" required>
+            </div>
+            <div class="form-group">
+              <label for="color">Color:</label>
+              <input type="text" id="color" required>
+            </div>
+          </div>
+  
+          <div class="button-group">
+            <button type="submit" class="submit-btn">Add Animal</button>
+            <button type="button" class="cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
     <div class="main-content">
-      <!-- title -->
+
       <header class="top-bar">
         <h1>Home</h1>
+        <!-- TODO: Welcome vet name based on vet_id -->
+        <h3>Welcome, Vet 1</h3>
       </header>
-      <!-- main -->
       <section class="content">
         <button class="add-animal-button">Add New Animal</button>
         <div class="header">
@@ -45,11 +93,118 @@
                     <th style="border: 1px solid #ddd; padding: 10px;">Breed</th>
                     <th style="border: 1px solid #ddd; padding: 10px;">Color</th>
                 </tr>
+
             </thead>
+            <tbody>
+            </tbody>
         </table>
-        </section>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // TODO: Fetch vet_id from storage, change the preset one to seesion
+                fetchAnimalList(1);
+            });
+
+            async function fetchAnimalList(vet_id) {
+                try {
+                    const response = await fetch(`http://localhost:5000/animal-list?vet_id=${vet_id}`);
+                    const data = await response.json();
+
+                    const tableBody = document.querySelector("#animalTable tbody");
+                    tableBody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        const noRecordsRow = document.createElement('tr');
+                        noRecordsRow.innerHTML = `
+                            <td colspan="7" style="text-align: center; padding: 10px;">No records found.</td>
+                        `;
+                        tableBody.appendChild(noRecordsRow);
+                        return;
+                    }
+
+                    data.forEach(animal => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.animal_id}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.name}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.last_name}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.species}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.dob || 'Unknown'}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.breed}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.color}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                } catch (error) {
+                    console.error('Error fetching animal list:', error);
+                    const tableBody = document.querySelector("#animalTable tbody");
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 10px; color: red;">
+                                Error loading records. Please try again later.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            //show modal when Add New Animal button is clicked
+            document.querySelector('.add-animal-button').addEventListener('click', () => {
+                document.getElementById('addAnimalModal').style.display = 'block';
+            });
+
+            //hide modal when Cancel button is clicked
+            document.querySelector('.cancel-btn').addEventListener('click', () => {
+                document.getElementById('addAnimalModal').style.display = 'none';
+                document.getElementById('addAnimalForm').reset();
+            });
+
+            
+            document.getElementById('addAnimalForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    name: document.getElementById('petName').value,
+                    last_name: document.getElementById('petLastName').value,
+                    species: document.getElementById('species').value,
+                    dob: document.getElementById('dob').value,
+                    breed: document.getElementById('breed').value,
+                    color: document.getElementById('color').value,
+                    vet_id: 1, //TODO: VET ID should be from session
+                    owner_id: null
+                };
+
+                try {
+                    const response = await fetch('http://localhost:5000/add-animal', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Animal added successfully!');
+                        document.getElementById('addAnimalModal').style.display = 'none';
+                        document.getElementById('addAnimalForm').reset();
+                        fetchAnimalList(1); // Refresh the table
+                        //TODO: Refresh the animal list based on vet_id
+                    } else {
+                        alert(result.error || 'Failed to add animal');
+                    }
+                } catch (error) {
+                    console.error('Error adding animal:', error);
+                    alert('Failed to add animal. Please try again.');
+                }
+            });
+        </script>
       </section>
     </div>
   </div>
+
+
+  
 </body>
 </html>

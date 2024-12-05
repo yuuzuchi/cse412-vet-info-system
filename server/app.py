@@ -301,9 +301,10 @@ def animal_list():
     if not vet_id:
         return jsonify({"error": "vet_id is required"}), 400
 
-    # Filter animals based on the vet_id
+    # Filter animals based on the vet_id and include breed and color
     animals = Animal.query.with_entities(
-        Animal.animal_id, Animal.name, Animal.last_name, Animal.species, Animal.dob
+        Animal.animal_id, Animal.name, Animal.last_name, Animal.species, 
+        Animal.dob, Animal.breed, Animal.color  # Added breed and color
     ).filter(Animal.vet_id == vet_id).all()
 
     # Transform data into JSON format
@@ -313,7 +314,9 @@ def animal_list():
             "name": animal.name,
             "last_name": animal.last_name,
             "species": animal.species,
-            "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None
+            "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None,
+            "breed": animal.breed,  # Added breed
+            "color": animal.color   # Added color
         }
         for animal in animals
     ]
@@ -669,6 +672,44 @@ def edit_history():
         # Commit the changes to the database
         db.session.commit()
         return jsonify({"message": "Record updated successfully!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/check-owner', methods=['GET'])
+def check_owner():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    owner = Owner.query.filter_by(email_address=email).first()
+    if owner:
+        return jsonify({"exists": True, "name": owner.name, "owner_id": owner.owner_id})
+    return jsonify({"exists": False})
+
+@app.route('/add-animal', methods=['POST'])
+def add_animal():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        new_animal = Animal(
+            name=data.get('name'),
+            last_name=data.get('last_name'),
+            species=data.get('species'),
+            dob=data.get('dob'),
+            breed=data.get('breed'),
+            color=data.get('color'),
+            vet_id=data.get('vet_id'),
+            owner_id=data.get('owner_id')
+        )
+
+        db.session.add(new_animal)
+        db.session.commit()
+
+        return jsonify({"message": "Animal added successfully", "animal_id": new_animal.animal_id}), 200
 
     except Exception as e:
         db.session.rollback()
