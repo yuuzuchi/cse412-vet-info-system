@@ -1,0 +1,160 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+  }
+  
+
+  .dashboard-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+.sidebar {
+    width: 250px;
+    background-color: #2d3748;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .menu {
+    list-style: none;
+    padding: 0;
+    flex-grow: 1;
+    margin-top: 10px;
+  }
+  
+  .menu li {
+    padding: 15px;
+    margin-bottom: 10px;
+    color: #a0aec0;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .menu li:hover,
+  .menu .active {
+    background-color: #4a5568;
+    color: #fff;
+  }
+  
+  .logout {
+    margin-top: auto;
+    text-align: center;
+  }
+  
+  .logout-button {
+    display: block;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: transparent; 
+    color: #fff; 
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .logout-button:hover {
+    background-color: #e53e3e;
+    color: #fff; 
+  }
+  
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+
+  .top-bar {
+    background-color: #fff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .top-bar h1 {
+    font-size: 1.8em;
+    color: #333;
+  }
+  
+
+  .content {
+    flex: 1;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .content p {
+    font-size: 1.2em;
+    color: #555;
+    line-height: 1.6;
+  }
+
+ .header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #007bff; 
+    color: white;
+    padding: 10px 0;
+    border-radius: 5px 5px 0 0;
+    width: 100%; 
+    font-size: 20px;
+    margin-top: 10px;
+ }
+
+ .menu-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .menu-link:hover {
+    background-color: #4a5568;
+    color: #fff;
+  }
+  
+  .menu .active .menu-link {
+    background-color: #4a5568;
+    color: #fff;
+  }
+
+  .add-animal-button {
+    padding: 10px 15px;
+    background-color: #007BFF; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.add-animal-button:hover {
+    background-color: #0162ca; 
+}
+  
+  
