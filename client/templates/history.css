@@ -5,8 +5,14 @@ body {
     background-color: #f5f5f5;
 }
 
-.history-container {
+.container {
     width: 80%;
+    margin: 50px auto;
+    background-color: #f5f5f5;
+}
+
+.history-container {
+    width: 100%;
     margin: 50px auto;
     background-color: #fff;
     border: 1px solid #ccc;
@@ -69,7 +75,7 @@ tr:hover {
     background-color: white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    width: 78%;
+    width: 97%;
     margin: 50px auto;
     overflow: hidden;
     border: 1px solid #ccc;
@@ -111,3 +117,10 @@ tr:hover {
     cursor: pointer;
     z-index: 1001;
 }
+
+.table-container {
+    max-height: 300px;
+    overflow-y: auto; 
+    border: 1px solid #ddd;
+}
+
