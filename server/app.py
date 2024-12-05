@@ -232,10 +232,19 @@ def getAllHistoryReptiles():
 
 @app.route('/medicals', methods=['GET'])
 def getAllMedicals():
-    medicals = Medical.query.order_by(Medical.medical_id).all()
+    medicals = db.session.query(
+        Medical.medical_id,
+        Medical.animal_id,
+        Medical.symptoms,
+        Medical.treatment,
+        Medical.record_date,
+        Animal.name.label('animal_name')  # Join with Animal table to get the name
+    ).join(Animal, Medical.animal_id == Animal.animal_id).order_by(Medical.medical_id).all()
+
     return jsonify([{
         'Medical_id': medical.medical_id,
         'Animal_id': medical.animal_id,
+        'Animal_name': medical.animal_name,  # Include animal name in the response
         'Symptoms': medical.symptoms,
         'Treatment': medical.treatment,
         'Record_date': medical.record_date
@@ -537,6 +546,54 @@ def delete_history():
         print("Error deleting history:", e)
         return jsonify({"error": str(e)}), 500
 
+@app.route('/add-medical', methods=['POST'])
+def add_medical():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Create new medical record
+        new_medical = Medical(
+            animal_id=data.get('animal_id'),
+            symptoms=data.get('symptoms'),
+            treatment=data.get('treatment'),
+            record_date=data.get('record_date')
+        )
+
+        db.session.add(new_medical)
+        db.session.commit()
+
+        return jsonify({"message": "Medical record added successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/add-medicine', methods=['POST'])
+def add_medicine():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Create new medicine record
+        new_medicine = Medicine(
+            medical_id=data.get('medical_id'),
+            medicine_name=data.get('medicine_name'),
+            doses=data.get('doses'),
+            date_issue=data.get('date_issue')
+        )
+
+        db.session.add(new_medicine)
+        db.session.commit()
+
+        return jsonify({"message": "Medicine record added successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 

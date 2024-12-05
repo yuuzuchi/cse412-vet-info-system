@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Records</title>
+    <link rel="stylesheet" href="medical.css">
+</head>
+<body>
+    <div id="modalOverlay" class="modal-overlay"></div>
+    <div class="medical-container">
+        <div class="medical-header">
+            Medical Records
+        </div>
+
+        <div style="padding: 10px;">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by Animal ID, Symptoms, or Treatment..."
+            />
+        </div>
+
+        <div class="medical-content">
+            <table id="medicalTable">
+                <thead>
+                    <tr>
+                        <th>Medical ID</th>
+                        <th>Animal Name</th>
+                        <th>Symptoms</th>
+                        <th>Treatment</th>
+                        <th>Record Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <button id="addMedicalButton">Add Medical Record</button>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <h2>Add Medical Record</h2>
+            <div class="animal-search-section">
+                <div class="form-group">
+                    <label for="animalSearch">Search Animal:</label>
+                    <input 
+                        type="text" 
+                        id="animalSearch" 
+                        placeholder="Search by name, species, or date of birth..."
+                    >
+                </div>
+                <div id="searchResults" class="search-results">
+                    <!-- Search results will be displayed here -->
+                </div>
+            </div>
+            <form id="medicalForm">
+                <input type="hidden" id="selectedAnimalId" name="animalId">
+                <div id="selectedAnimalInfo" class="selected-animal-info" style="display: none;">
+                    <!-- Selected animal info will be displayed here -->
+                </div>
+                <div class="form-group">
+                    <label for="symptoms">Symptoms:</label>
+                    <textarea id="symptoms" name="symptoms" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="treatment">Treatment:</label>
+                    <textarea id="treatment" name="treatment" required></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit">Submit</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="medicine-details-container">
+        <h2 id="medicineDetailsTitle">Medicine Details</h2>
+        <table id="medicineTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Medicine ID</th>
+                    <th>Medicine Name</th>
+                    <th>Doses</th>
+                    <th>Date Issued</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <button id="addMedicineButton" style="display: none;">Add Medicine Record</button>
+    </div>
+
+    <div id="medicineModal" class="modal">
+        <div class="modal-content">
+            <h2>Add Medicine Record</h2>
+            <form id="medicineForm">
+                <input type="hidden" id="selectedMedicalId" name="medicalId">
+                <div class="form-group">
+                    <label for="medicineName">Medicine Name:</label>
+                    <input type="text" id="medicineName" name="medicineName" required>
+                </div>
+                <div class="form-group">
+                    <label for="doses">Doses:</label>
+                    <input type="number" id="doses" name="doses" required min="1" step="1">
+                </div>
+                <div class="form-buttons">
+                    <button type="submit">Submit</button>
+                    <button type="button" class="cancel-btn-medicine">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // get the modal
+        var modal = document.getElementById("myModal");
+        // get the button that opens the modal
+        var btn = document.getElementById("addMedicalButton");
+        // get the cancel button
+        var cancelBtn = document.querySelector(".cancel-btn");
+
+        // when the user clicks the button, open the modal 
+        btn.onclick = function() {
+            modal.style.display = "block";
+            document.getElementById('modalOverlay').style.display = "block";
+        }
+
+        // when the user clicks the cancel button, close the modal
+        cancelBtn.onclick = function() {
+            modal.style.display = "none";
+            document.getElementById('modalOverlay').style.display = "none";
+            document.getElementById("medicalForm").reset();
+            document.getElementById("animalSearch").value = '';
+            document.getElementById("searchResults").innerHTML = '';
+            document.getElementById("selectedAnimalInfo").style.display = 'none';
+            document.getElementById("selectedAnimalId").value = '';
+            document.getElementById("selectedAnimalInfo").innerHTML = '';
+            resetMedicineSection();
+        }
+        
+
+        // animal search functionality
+        document.getElementById('animalSearch').addEventListener('input', async (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const searchResults = document.getElementById('searchResults');
+            
+            // clear results if search term is empty
+            if (!searchTerm) {
+                searchResults.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/animals');
+                const animals = await response.json();
+                const filteredAnimals = animals.filter(animal => 
+                    animal.Name.toLowerCase().includes(searchTerm) ||
+                    animal.Species.toLowerCase().includes(searchTerm) ||
+                    (animal.DOB && animal.DOB.includes(searchTerm))
+                );
+
+                if (filteredAnimals.length === 0) {
+                    searchResults.innerHTML = '<div class="no-results">No animals found</div>';
+                    return;
+                }
+
+                const resultsHtml = filteredAnimals.map(animal => `
+                    <div class="search-result-item" data-animal-id="${animal.Animal_id}">
+                        <strong>${animal.Name}</strong> (${animal.Species})
+                        <br>
+                        <small>DOB: ${animal.DOB || 'Unknown'}</small>
+                    </div>
+                `).join('');
+
+                searchResults.innerHTML = resultsHtml;
+
+                // Add click handlers to search results
+                document.querySelectorAll('.search-result-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const animalId = this.dataset.animalId;
+                        const animalInfo = filteredAnimals.find(a => a.Animal_id == animalId);
+                        
+                        // Set the hidden input value
+                        document.getElementById('selectedAnimalId').value = animalId;
+                        
+                        // Display selected animal info
+                        document.getElementById('selectedAnimalInfo').innerHTML = `
+                            <div class="selected-animal">
+                                <h3>Selected Animal:</h3>
+                                <p><strong>Name:</strong> ${animalInfo.Name}</p>
+                                <p><strong>Species:</strong> ${animalInfo.Species}</p>
+                                <p><strong>DOB:</strong> ${animalInfo.DOB || 'Unknown'}</p>
+                            </div>
+                        `;
+                        document.getElementById('selectedAnimalInfo').style.display = 'block';
+                        
+                        // Clear search results and input
+                        searchResults.innerHTML = '';
+                        document.getElementById('animalSearch').value = '';
+                    });
+                });
+            } catch (error) {
+                console.error('Error searching animals:', error);
+                searchResults.innerHTML = '<div class="error">Error searching animals</div>';
+            }
+        });
+
+        // Handle medical form submission
+        document.getElementById('medicalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Check if an animal is selected
+            const selectedAnimalId = document.getElementById('selectedAnimalId').value;
+            if (!selectedAnimalId) {
+                alert('Please select an animal first');
+                return;
+            }
+
+            // Get form data
+            const symptoms = document.getElementById('symptoms').value;
+            const treatment = document.getElementById('treatment').value;
+            const currentDate = new Date().toISOString().split('T')[0];
+
+            try {
+                const response = await fetch('http://localhost:5000/add-medical', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        animal_id: selectedAnimalId,
+                        symptoms: symptoms,
+                        treatment: treatment,
+                        record_date: currentDate
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Medical record added successfully');
+                    // Reset form and close modal
+                    cancelBtn.onclick();
+                    // Refresh the medical records table
+                    fetchMedicalRecords();
+                } else {
+                    throw new Error(result.error || 'Failed to add medical record');
+                }
+            } catch (error) {
+                console.error('Error adding medical record:', error);
+                alert('Failed to add medical record. Please try again.');
+            }
+        });
+
+        // Fetch all medical records
+        async function fetchMedicalRecords() {
+            try {
+                const response = await fetch('http://localhost:5000/medicals');
+                const data = await response.json();
+                const tableBody = document.querySelector("#medicalTable tbody");
+                
+                tableBody.innerHTML = '';
+                
+                data.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${record.Medical_id}</td>
+                        <td>${record.Animal_name || 'N/A'}</td>
+                        <td>${record.Symptoms || 'N/A'}</td>
+                        <td>${record.Treatment || 'N/A'}</td>
+                        <td>${record.Record_date || 'N/A'}</td>
+                    `;
+                    
+                    row.addEventListener('click', () => {
+                        document.querySelectorAll('#medicalTable tbody tr').forEach(r => 
+                            r.classList.remove('highlight')
+                        );
+                        row.classList.add('highlight');
+                        fetchMedicineDetails(record.Medical_id);
+                    });
+                    
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching medical records:', error);
+            }
+        }
+
+        // Fetch medicines for a specific medical record
+        async function fetchMedicineDetails(medicalId) {
+            try {
+                const response = await fetch('http://localhost:5000/medicines');
+                const allMedicines = await response.json();
+                
+                const relatedMedicines = allMedicines.filter(
+                    medicine => medicine.Medical_id === medicalId
+                );
+
+                const medicineTable = document.getElementById('medicineTable');
+                const addMedicineButton = document.getElementById('addMedicineButton');
+                const tableBody = medicineTable.querySelector('tbody');
+                const title = document.getElementById('medicineDetailsTitle');
+
+                title.textContent = `Medicines for Medical Record #${medicalId}`;
+                tableBody.innerHTML = '';
+
+                if (relatedMedicines.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center;">
+                                No medicines found for this medical record
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    relatedMedicines.forEach(medicine => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${medicine.Medicine_id}</td>
+                            <td>${medicine.Medicine_name || 'N/A'}</td>
+                            <td>${medicine.Doses || 'N/A'}</td>
+                            <td>${medicine.Date_issue || 'N/A'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+
+                medicineTable.style.display = 'table';
+                addMedicineButton.style.display = 'block'; // Show the add medicine button
+            } catch (error) {
+                console.error('Error fetching medicine details:', error);
+            }
+        }
+
+        // Setup search functionality
+        function setupSearchFilter() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', () => {
+                // Clear any selected rows
+                document.querySelectorAll('#medicalTable tbody tr').forEach(row => {
+                    row.classList.remove('highlight');
+                });
+                
+                // Hide medicine details table and reset title when searching
+                const medicineTable = document.getElementById('medicineTable');
+                const title = document.getElementById('medicineDetailsTitle');
+                
+                medicineTable.style.display = 'none';
+                title.textContent = 'Medicine Details';
+                
+                // Perform the search
+                const filter = searchInput.value.toLowerCase();
+                const rows = document.querySelectorAll('#medicalTable tbody tr');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                });
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMedicalRecords();
+            setupSearchFilter();
+        });
+
+        function resetMedicineSection() {
+            const medicineTable = document.getElementById('medicineTable');
+            const addMedicineButton = document.getElementById('addMedicineButton');
+            const title = document.getElementById('medicineDetailsTitle');
+            
+            // Remove highlight from medical records table
+            document.querySelectorAll('#medicalTable tbody tr').forEach(row => {
+                row.classList.remove('highlight');
+            });
+            
+            medicineTable.style.display = 'none';
+            addMedicineButton.style.display = 'none';
+            title.textContent = 'Medicine Details';
+        }
+
+        // Medicine modal functionality
+        const medicineModal = document.getElementById("medicineModal");
+        const addMedicineBtn = document.getElementById("addMedicineButton");
+        const cancelMedicineBtn = document.querySelector(".cancel-btn-medicine");
+
+        // When user clicks the add medicine button
+        addMedicineBtn.addEventListener('click', function() {
+            const selectedMedicalRow = document.querySelector('#medicalTable tbody tr.highlight');
+            if (!selectedMedicalRow) {
+                alert('Please select a medical record first');
+                return;
+            }
+            
+            const medicalId = selectedMedicalRow.querySelector('td:first-child').textContent;
+            document.getElementById('selectedMedicalId').value = medicalId;
+            medicineModal.style.display = "block";
+            document.getElementById('modalOverlay').style.display = "block";
+        });
+
+        // When user clicks the cancel button
+        cancelMedicineBtn.onclick = function() {
+            medicineModal.style.display = "none";
+            document.getElementById('modalOverlay').style.display = "none";
+            document.getElementById("medicineForm").reset();
+        }
+
+        // Handle medicine form submission
+        document.getElementById('medicineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const medicalId = document.getElementById('selectedMedicalId').value;
+            const medicineName = document.getElementById('medicineName').value;
+            const doses = document.getElementById('doses').value;
+            const currentDate = new Date().toISOString().split('T')[0];
+
+            try {
+                const response = await fetch('http://localhost:5000/add-medicine', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        medical_id: medicalId,
+                        medicine_name: medicineName,
+                        doses: doses,
+                        date_issue: currentDate
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Medicine record added successfully');
+                    medicineModal.style.display = "none";
+                    document.getElementById('modalOverlay').style.display = "none";
+                    document.getElementById("medicineForm").reset();
+                    
+                    // Refetch all medicines and update the table
+                    const medicineResponse = await fetch('http://localhost:5000/medicines');
+                    const allMedicines = await medicineResponse.json();
+                    const relatedMedicines = allMedicines.filter(
+                        medicine => medicine.Medical_id === parseInt(medicalId)
+                    );
+                    
+                    // Update the medicine table
+                    const medicineTable = document.getElementById('medicineTable');
+                    const tableBody = medicineTable.querySelector('tbody');
+                    tableBody.innerHTML = '';
+
+                    relatedMedicines.forEach(medicine => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${medicine.Medicine_id}</td>
+                            <td>${medicine.Medicine_name || 'N/A'}</td>
+                            <td>${medicine.Doses || 'N/A'}</td>
+                            <td>${medicine.Date_issue || 'N/A'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    throw new Error(result.error || 'Failed to add medicine record');
+                }
+            } catch (error) {
+                console.error('Error adding medicine record:', error);
+                alert('Failed to add medicine record. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
