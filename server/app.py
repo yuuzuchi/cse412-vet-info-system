@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-
+from sqlalchemy import desc
 
 
 app = Flask(__name__)
@@ -328,20 +328,19 @@ def get_history():
     if not animal_id or not species:
         return jsonify([]), 400  # Return empty array instead of error
 
-    species = species.lower()
     try:
         # Get the appropriate history model based on species
         history_model = {
-            'dog': HistoryDog,
-            'cat': HistoryCat,
-            'bird': HistoryBird,
-            'reptile': HistoryReptile
+            'Dog': HistoryDog,
+            'Cat': HistoryCat,
+            'Bird': HistoryBird,
+            'Reptile': HistoryReptile
         }.get(species)
 
         if not history_model:
             return jsonify([]), 400
 
-        cases = history_model.query.filter_by(animal_id=animal_id).all()
+        cases = history_model.query.filter_by(animal_id=animal_id).order_by(desc(history_model.date_visit)).all()
         return jsonify([{
             'Case_id': case.case_id,
             'Animal_id': case.animal_id,
@@ -361,7 +360,6 @@ def get_case_details():
     if not case_id or not species:
         return jsonify({"error": "case_id and species are required"}), 400
 
-    # 动态选择对应模型
     history_models = {
         "Bird": HistoryBird,
         "Cat": HistoryCat,
@@ -373,12 +371,10 @@ def get_case_details():
     if not model:
         return jsonify({"error": f"Unsupported species: {species}"}), 400
 
-    # 查询对应的病例
     case = model.query.filter_by(case_id=case_id).first()
     if not case:
         return jsonify({"error": "Case not found"}), 404
 
-    # 动态处理返回字段
     if species == "Bird":
         data = {
             "Case ID": case.case_id,
@@ -399,7 +395,7 @@ def get_case_details():
             "Date Visit": case.date_visit.strftime('%Y-%m-%d') if case.date_visit else "Unknown",
             "Weight": str(case.weight) if case.weight else "Unknown",
             "Sterilization": "Yes" if case.sterilization else "No",
-            "In/Outdoor": case.in_outdoor or "Unknown",
+            "In/Outdoor": "Yes" if case.sterilization else "No",
             "Food Passion": case.food_passion or "Unknown",
             "Comment": case.comment or "No comment",
             "Reason Visit": case.reason_visit or "No reason provided"
@@ -446,10 +442,8 @@ def add_history():
     if not species:
         return jsonify({"error": "Species is required"}), 400
 
-    species = species.lower()
-
     try:
-        if species == 'dog':
+        if species == 'Dog':
             new_history = HistoryDog(
                 animal_id=int(data.get('animal_id')),
                 vet_id=int(data.get('vet_id')),
@@ -461,7 +455,7 @@ def add_history():
                 exercise_level=data.get('exercise_level'),
                 food_passion=data.get('food_passion'),
             )
-        elif species == 'cat':
+        elif species == 'Cat':
             new_history = HistoryCat(
                 animal_id=int(data.get('animal_id')),
                 vet_id=int(data.get('vet_id')),
@@ -473,7 +467,7 @@ def add_history():
                 in_outdoor=data.get('in_outdoor', '').lower() in ['indoor', 'true', '1'],
                 food_passion=data.get('food_passion'),
             )
-        elif species == 'bird':
+        elif species == 'Bird':
             new_history = HistoryBird(
                 animal_id=int(data.get('animal_id')),
                 vet_id=int(data.get('vet_id')),
@@ -486,7 +480,7 @@ def add_history():
                 comment=data.get('comment'),
                 reason_visit=data.get('reason_visit'),
             )
-        elif species == 'reptile':
+        elif species == 'Reptile':
             new_history = HistoryReptile(
                 animal_id=int(data.get('animal_id')),
                 vet_id=int(data.get('vet_id')),
@@ -521,13 +515,13 @@ def delete_history():
 
     # Map species to the corresponding model
     history_models = {
-        "dog": HistoryDog,
-        "cat": HistoryCat,
-        "bird": HistoryBird,
-        "reptile": HistoryReptile,
+        "Dog": HistoryDog,
+        "Cat": HistoryCat,
+        "Bird": HistoryBird,
+        "Reptile": HistoryReptile,
     }
 
-    model = history_models.get(species.lower())
+    model = history_models.get(species)
     if not model:
         return jsonify({"error": f"Unsupported species: {species}"}), 400
 
@@ -590,6 +584,91 @@ def add_medicine():
         db.session.commit()
 
         return jsonify({"message": "Medicine record added successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/update-history', methods=['PUT'])
+def edit_history():
+    data = request.json
+    print("Received Data:", data)
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    species = data.pop('species', None)
+    case_id = data.pop('case_id', None)
+
+    if not species:
+        return jsonify({"error": "Species is required"}), 400
+    if not case_id:
+        return jsonify({"error": "Case ID is required"}), 400
+
+    try:
+        if species == 'Dog':
+            record = HistoryDog.query.filter_by(case_id=case_id).first()
+            if not record:
+                return jsonify({"error": f"Record not found for Case ID: {case_id}"}), 404
+
+            # Update fields for Dog
+            record.date_visit = data.get('date_visit', record.date_visit)
+            record.weight = float(data.get('weight', record.weight or 0))
+            record.sterilization = data.get('sterilization', '').lower() in ['yes', 'true', '1']
+            record.comment = data.get('comment', record.comment)
+            record.reason_visit = data.get('reason_visit', record.reason_visit)
+            record.exercise_level = data.get('exercise_level', record.exercise_level)
+            record.food_passion = data.get('food_passion', record.food_passion)
+
+        elif species == 'Cat':
+            record = HistoryCat.query.filter_by(case_id=case_id).first()
+            if not record:
+                return jsonify({"error": f"Record not found for Case ID: {case_id}"}), 404
+
+            # Update fields for Cat
+            record.date_visit = data.get('date_visit', record.date_visit)
+            record.weight = float(data.get('weight', record.weight or 0))
+            record.sterilization = data.get('sterilization', '').lower() in ['yes', 'true', '1']
+            record.comment = data.get('comment', record.comment)
+            record.reason_visit = data.get('reason_visit', record.reason_visit)
+            record.in_outdoor = data.get('in_outdoor', '').lower() in ['yes', 'true', '1']
+            record.food_passion = data.get('food_passion', record.food_passion)
+
+        elif species == 'Bird':
+            record = HistoryBird.query.filter_by(case_id=case_id).first()
+            if not record:
+                return jsonify({"error": f"Record not found for Case ID: {case_id}"}), 404
+
+            # Update fields for Bird
+            record.date_visit = data.get('date_visit', record.date_visit)
+            record.weight = float(data.get('weight', record.weight or 0))
+            record.wingspan = float(data.get('wingspan', record.wingspan or 0))
+            record.wingclip = data.get('wingclip', '').lower() in ['yes', 'true', '1']
+            record.flying_capacity = data.get('flying_capacity', record.flying_capacity)
+            record.cage_only = data.get('cage_only', '').lower() in ['yes', 'true', '1']
+            record.comment = data.get('comment', record.comment)
+            record.reason_visit = data.get('reason_visit', record.reason_visit)
+
+        elif species == 'Reptile':
+            record = HistoryReptile.query.filter_by(case_id=case_id).first()
+            if not record:
+                return jsonify({"error": f"Record not found for Case ID: {case_id}"}), 404
+
+            # Update fields for Reptile
+            record.date_visit = data.get('date_visit', record.date_visit)
+            record.weight = float(data.get('weight', record.weight or 0))
+            record.length = float(data.get('length', record.length or 0))
+            record.temperature_keep = float(data.get('temperature_keep', record.temperature_keep or 0))
+            record.humidity_keep = float(data.get('humidity_keep', record.humidity_keep or 0))
+            record.housing_type = data.get('housing_type', record.housing_type)
+            record.comment = data.get('comment', record.comment)
+            record.reason_visit = data.get('reason_visit', record.reason_visit)
+
+        else:
+            return jsonify({"error": f"Unsupported species: {species}"}), 400
+
+        # Commit the changes to the database
+        db.session.commit()
+        return jsonify({"message": "Record updated successfully!"}), 200
 
     except Exception as e:
         db.session.rollback()
