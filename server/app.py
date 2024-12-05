@@ -301,22 +301,27 @@ def animal_list():
     if not vet_id:
         return jsonify({"error": "vet_id is required"}), 400
 
-    # Filter animals based on the vet_id
-    animals = Animal.query.with_entities(
-        Animal.animal_id, Animal.name, Animal.last_name, Animal.species, Animal.dob
-    ).filter(Animal.vet_id == vet_id).all()
+    # Join with owner table and include owner information
+    animals = db.session.query(
+        Animal, Owner
+    ).outerjoin(
+        Owner, Animal.owner_id == Owner.owner_id
+    ).filter(
+        Animal.vet_id == vet_id
+    ).order_by(Animal.animal_id).all()
 
-    # Transform data into JSON format
-    data = [
-        {
-            "animal_id": animal.animal_id,
-            "name": animal.name,
-            "last_name": animal.last_name,
-            "species": animal.species,
-            "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None
-        }
-        for animal in animals
-    ]
+    data = [{
+        "animal_id": animal.animal_id,
+        "name": animal.name,
+        "last_name": animal.last_name,
+        "species": animal.species,
+        "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None,
+        "breed": animal.breed,
+        "color": animal.color,
+        "owner_name": owner.name if owner else None,
+        "owner_email": owner.email_address if owner else None,
+        "owner_id": owner.owner_id if owner else None
+    } for animal, owner in animals]
 
     return jsonify(data)
 
@@ -673,6 +678,100 @@ def edit_history():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@app.route('/check-owner', methods=['GET'])
+def check_owner():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    owner = Owner.query.filter_by(email_address=email).first()
+    if owner:
+        return jsonify({"exists": True, "name": owner.name, "owner_id": owner.owner_id})
+    return jsonify({"exists": False})
+
+@app.route('/add-animal', methods=['POST'])
+def add_animal():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        new_animal = Animal(
+            name=data.get('name'),
+            last_name=data.get('last_name'),
+            species=data.get('species'),
+            dob=data.get('dob'),
+            breed=data.get('breed'),
+            color=data.get('color'),
+            vet_id=data.get('vet_id'),
+            owner_id=data.get('owner_id')
+        )
+
+        db.session.add(new_animal)
+        db.session.commit()
+
+        return jsonify({"message": "Animal added successfully", "animal_id": new_animal.animal_id}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/add-owner', methods=['POST'])
+def add_owner():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        new_owner = Owner(
+            name=data.get('name'),
+            email_address=data.get('email')
+        )
+
+        db.session.add(new_owner)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Owner added successfully",
+            "owner_id": new_owner.owner_id
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error adding owner: {e}")  # Log the error
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/update-animal/<int:animal_id>', methods=['PUT'])
+def update_animal(animal_id):
+    try:
+        data = request.json
+        animal = Animal.query.get(animal_id)
+        
+        if not animal:
+            return jsonify({"error": "Animal not found"}), 404
+
+        animal.name = data.get('name', animal.name)
+        animal.last_name = data.get('last_name', animal.last_name)
+        animal.dob = data.get('dob', animal.dob)
+        animal.owner_id = data.get('owner_id', animal.owner_id)
+
+        db.session.commit()
+        return jsonify({"message": "Animal updated successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/owner/<int:owner_id>', methods=['GET'])
+def get_owner(owner_id):
+    owner = Owner.query.get(owner_id)
+    if not owner:
+        return jsonify({"error": "Owner not found"}), 404
+    return jsonify({
+        "name": owner.name,
+        "email_address": owner.email_address
+    })
 
 
 
