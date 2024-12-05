@@ -62,7 +62,7 @@
           </div>
   
           <div class="form-section">
-            <h3>Owner Information (Optional)</h3>
+            <h3>Owner Information</h3>
             <div class="form-group">
               <label for="ownerName">Owner Name:</label>
               <input type="text" id="ownerName">
@@ -81,6 +81,46 @@
       </div>
     </div>
 
+    <div id="editAnimalModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Edit Animal</h2>
+            <form id="editAnimalForm">
+                <div class="form-section">
+                    <h3>Pet Information</h3>
+                    <div class="form-group">
+                        <label for="editPetName">Pet Name:</label>
+                        <input type="text" id="editPetName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPetLastName">Pet Last Name:</label>
+                        <input type="text" id="editPetLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDob">Date of Birth:</label>
+                        <input type="date" id="editDob">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Owner Information</h3>
+                    <div class="form-group">
+                        <label for="editOwnerName">Owner Name:</label>
+                        <input type="text" id="editOwnerName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editOwnerEmail">Owner Email:</label>
+                        <input type="email" id="editOwnerEmail">
+                    </div>
+                </div>
+
+                <input type="hidden" id="editAnimalId">
+                <div class="button-group">
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="main-content">
 
@@ -144,6 +184,14 @@
                             <td style="border: 1px solid #ddd; padding: 8px;">${animal.breed}</td>
                             <td style="border: 1px solid #ddd; padding: 8px;">${animal.color}</td>
                         `;
+                        row.style.cursor = 'pointer';
+                        
+                        row.addEventListener('click', () => {
+                            document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                            row.classList.add('highlight');
+                            openEditModal(animal);
+                        });
+                        
                         tableBody.appendChild(row);
                     });
 
@@ -169,6 +217,7 @@
             document.querySelector('.cancel-btn').addEventListener('click', () => {
                 document.getElementById('addAnimalModal').style.display = 'none';
                 document.getElementById('addAnimalForm').reset();
+                document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
             });
 
             
@@ -181,9 +230,9 @@
                 try {
                     let owner_id = null;
                     
-                    // Only process owner if both name and email are provided
+                    //only process owner if both name and email are provided
                     if (ownerEmail && ownerName) {
-                        // Check if owner exists
+                        //check if owner exists
                         const ownerResponse = await fetch(`http://localhost:5000/check-owner?email=${encodeURIComponent(ownerEmail)}`);
                         const ownerData = await ownerResponse.json();
                         
@@ -195,7 +244,7 @@
                             }
                             owner_id = ownerData.owner_id;
                         } else {
-                            // Create new owner
+                            //create new owner
                             const createOwnerResponse = await fetch('http://localhost:5000/add-owner', {
                                 method: 'POST',
                                 headers: {
@@ -211,7 +260,7 @@
                         }
                     }
 
-                    // Proceed with adding the animal
+                    //now proceed with adding the animal
                     const formData = {
                         name: document.getElementById('petName').value,
                         last_name: document.getElementById('petLastName').value,
@@ -220,7 +269,8 @@
                         breed: document.getElementById('breed').value,
                         color: document.getElementById('color').value,
                         vet_id: 1,
-                        owner_id: owner_id  // Will be null if no owner info provided
+                        //TODO: vet_id should be session
+                        owner_id: owner_id 
                     };
 
                     const response = await fetch('http://localhost:5000/add-animal', {
@@ -237,7 +287,8 @@
                         alert('Animal added successfully!');
                         document.getElementById('addAnimalModal').style.display = 'none';
                         document.getElementById('addAnimalForm').reset();
-                        fetchAnimalList(1); // Refresh the table
+                        document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                        fetchAnimalList(1);
                         //TODO: Refresh the animal list based on vet_id
                     } else {
                         alert(result.error || 'Failed to add animal');
@@ -246,6 +297,99 @@
                     console.error('Error:', error);
                     alert('Failed to process the request. Please try again.');
                 }
+            });
+
+            async function openEditModal(animal) {
+                // Fetch owner information if owner_id exists
+                let ownerInfo = { name: '', email_address: '' };
+                if (animal.owner_id) {
+                    try {
+                        const response = await fetch(`http://localhost:5000/owner/${animal.owner_id}`);
+                        ownerInfo = await response.json();
+                    } catch (error) {
+                        console.error('Error fetching owner info:', error);
+                    }
+                }
+
+                document.getElementById('editPetName').value = animal.name;
+                document.getElementById('editPetLastName').value = animal.last_name;
+                document.getElementById('editDob').value = animal.dob || '';
+                document.getElementById('editOwnerName').value = animal.owner_name || '';
+                document.getElementById('editOwnerEmail').value = animal.owner_email || '';
+                document.getElementById('editAnimalId').value = animal.animal_id;
+
+
+                document.getElementById('editAnimalModal').style.display = 'block';
+            }
+
+            document.getElementById('editAnimalForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const animalId = document.getElementById('editAnimalId').value;
+                const ownerEmail = document.getElementById('editOwnerEmail').value.trim();
+                const ownerName = document.getElementById('editOwnerName').value.trim();
+                
+                try {
+                    let owner_id = null;
+                    
+                    if (ownerEmail && ownerName) {
+
+                        const ownerResponse = await fetch(`http://localhost:5000/check-owner?email=${encodeURIComponent(ownerEmail)}`);
+                        const ownerData = await ownerResponse.json();
+                        
+                        if (ownerData.exists) {
+                            if (ownerData.name !== ownerName) {
+                                if (!confirm('An owner with this email exists but with a different name. Continue with the existing owner?')) {
+                                    return;
+                                }
+                            }
+                            owner_id = ownerData.owner_id;
+                        } else {
+
+                            const createOwnerResponse = await fetch('http://localhost:5000/add-owner', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: ownerName, email: ownerEmail })
+                            });
+                            const newOwnerData = await createOwnerResponse.json();
+                            owner_id = newOwnerData.owner_id;
+                        }
+                    }
+
+                    //update animal
+                    const response = await fetch(`http://localhost:5000/update-animal/${animalId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: document.getElementById('editPetName').value,
+                            last_name: document.getElementById('editPetLastName').value,
+                            dob: document.getElementById('editDob').value,
+                            owner_id: owner_id
+                        })
+                    });
+
+                    if (response.ok) {
+                        alert('Animal updated successfully!');
+                        document.getElementById('editAnimalModal').style.display = 'none';
+                        document.getElementById('editAnimalForm').reset();
+                        document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                        fetchAnimalList(1); //refresh the table
+                        //TODO: vet_id should be session
+                    } else {
+                        const result = await response.json();
+                        alert(result.error || 'Failed to update animal');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to process the request. Please try again.');
+                }
+            });
+
+            // Close edit modal
+            document.querySelector('#editAnimalModal .cancel-btn').addEventListener('click', () => {
+                document.getElementById('editAnimalModal').style.display = 'none';
+                document.getElementById('editAnimalForm').reset();
+                document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
             });
         </script>
       </section>

@@ -301,25 +301,27 @@ def animal_list():
     if not vet_id:
         return jsonify({"error": "vet_id is required"}), 400
 
-    # Filter animals based on the vet_id and include breed and color
-    animals = Animal.query.with_entities(
-        Animal.animal_id, Animal.name, Animal.last_name, Animal.species, 
-        Animal.dob, Animal.breed, Animal.color  # Added breed and color
-    ).filter(Animal.vet_id == vet_id).all()
+    # Join with owner table and include owner information
+    animals = db.session.query(
+        Animal, Owner
+    ).outerjoin(
+        Owner, Animal.owner_id == Owner.owner_id
+    ).filter(
+        Animal.vet_id == vet_id
+    ).order_by(Animal.animal_id).all()
 
-    # Transform data into JSON format
-    data = [
-        {
-            "animal_id": animal.animal_id,
-            "name": animal.name,
-            "last_name": animal.last_name,
-            "species": animal.species,
-            "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None,
-            "breed": animal.breed,  # Added breed
-            "color": animal.color   # Added color
-        }
-        for animal in animals
-    ]
+    data = [{
+        "animal_id": animal.animal_id,
+        "name": animal.name,
+        "last_name": animal.last_name,
+        "species": animal.species,
+        "dob": animal.dob.strftime('%Y-%m-%d') if animal.dob else None,
+        "breed": animal.breed,
+        "color": animal.color,
+        "owner_name": owner.name if owner else None,
+        "owner_email": owner.email_address if owner else None,
+        "owner_id": owner.owner_id if owner else None
+    } for animal, owner in animals]
 
     return jsonify(data)
 
@@ -737,7 +739,39 @@ def add_owner():
 
     except Exception as e:
         db.session.rollback()
+        print(f"Error adding owner: {e}")  # Log the error
         return jsonify({"error": str(e)}), 500
+
+@app.route('/update-animal/<int:animal_id>', methods=['PUT'])
+def update_animal(animal_id):
+    try:
+        data = request.json
+        animal = Animal.query.get(animal_id)
+        
+        if not animal:
+            return jsonify({"error": "Animal not found"}), 404
+
+        animal.name = data.get('name', animal.name)
+        animal.last_name = data.get('last_name', animal.last_name)
+        animal.dob = data.get('dob', animal.dob)
+        animal.owner_id = data.get('owner_id', animal.owner_id)
+
+        db.session.commit()
+        return jsonify({"message": "Animal updated successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/owner/<int:owner_id>', methods=['GET'])
+def get_owner(owner_id):
+    owner = Owner.query.get(owner_id)
+    if not owner:
+        return jsonify({"error": "Owner not found"}), 404
+    return jsonify({
+        "name": owner.name,
+        "email_address": owner.email_address
+    })
 
 
 
