@@ -715,6 +715,30 @@ def add_animal():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/add-owner', methods=['POST'])
+def add_owner():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        new_owner = Owner(
+            name=data.get('name'),
+            email_address=data.get('email')
+        )
+
+        db.session.add(new_owner)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Owner added successfully",
+            "owner_id": new_owner.owner_id
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 
 

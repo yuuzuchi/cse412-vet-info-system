@@ -61,6 +61,18 @@
             </div>
           </div>
   
+          <div class="form-section">
+            <h3>Owner Information (Optional)</h3>
+            <div class="form-group">
+              <label for="ownerName">Owner Name:</label>
+              <input type="text" id="ownerName">
+            </div>
+            <div class="form-group">
+              <label for="ownerEmail">Owner Email:</label>
+              <input type="email" id="ownerEmail">
+            </div>
+          </div>
+  
           <div class="button-group">
             <button type="submit" class="submit-btn">Add Animal</button>
             <button type="button" class="cancel-btn">Cancel</button>
@@ -163,18 +175,54 @@
             document.getElementById('addAnimalForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const formData = {
-                    name: document.getElementById('petName').value,
-                    last_name: document.getElementById('petLastName').value,
-                    species: document.getElementById('species').value,
-                    dob: document.getElementById('dob').value,
-                    breed: document.getElementById('breed').value,
-                    color: document.getElementById('color').value,
-                    vet_id: 1, //TODO: VET ID should be from session
-                    owner_id: null
-                };
-
+                const ownerEmail = document.getElementById('ownerEmail').value.trim();
+                const ownerName = document.getElementById('ownerName').value.trim();
+                
                 try {
+                    let owner_id = null;
+                    
+                    // Only process owner if both name and email are provided
+                    if (ownerEmail && ownerName) {
+                        // Check if owner exists
+                        const ownerResponse = await fetch(`http://localhost:5000/check-owner?email=${encodeURIComponent(ownerEmail)}`);
+                        const ownerData = await ownerResponse.json();
+                        
+                        if (ownerData.exists) {
+                            if (ownerData.name !== ownerName) {
+                                if (!confirm('An owner with this email exists but with a different name. Continue with the existing owner?')) {
+                                    return;
+                                }
+                            }
+                            owner_id = ownerData.owner_id;
+                        } else {
+                            // Create new owner
+                            const createOwnerResponse = await fetch('http://localhost:5000/add-owner', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    name: ownerName,
+                                    email: ownerEmail
+                                })
+                            });
+                            const newOwnerData = await createOwnerResponse.json();
+                            owner_id = newOwnerData.owner_id;
+                        }
+                    }
+
+                    // Proceed with adding the animal
+                    const formData = {
+                        name: document.getElementById('petName').value,
+                        last_name: document.getElementById('petLastName').value,
+                        species: document.getElementById('species').value,
+                        dob: document.getElementById('dob').value,
+                        breed: document.getElementById('breed').value,
+                        color: document.getElementById('color').value,
+                        vet_id: 1,
+                        owner_id: owner_id  // Will be null if no owner info provided
+                    };
+
                     const response = await fetch('http://localhost:5000/add-animal', {
                         method: 'POST',
                         headers: {
@@ -195,8 +243,8 @@
                         alert(result.error || 'Failed to add animal');
                     }
                 } catch (error) {
-                    console.error('Error adding animal:', error);
-                    alert('Failed to add animal. Please try again.');
+                    console.error('Error:', error);
+                    alert('Failed to process the request. Please try again.');
                 }
             });
         </script>
