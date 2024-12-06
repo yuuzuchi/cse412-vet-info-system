@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaccination Records</title>
+    <link rel="stylesheet" href="vaccination.css">
+</head>
+<body>
+    <div class="board">
+        <button id="backToHomeButton" style="padding: 10px 20px; background-color: #85898d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">
+            Return to Home
+        </button>
+        <div class="vaccine-container">
+            <div class="header">
+                Vaccination Records
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                <input
+                    type="text"
+                    id="searchbar"
+                    class="search-bar"
+                    placeholder="Search by Animal Name, or Vaccine Name..."
+                    style="flex: 1; margin-right: 10px; "
+                />
+                <button
+                    id="addvaccineButton"
+                    style="padding: 8px 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                >
+                    Add New Record
+                </button>
+            </div>
+            <div style="margin-bottom: -20px;"></div>
+            <div class="edit-instruction">
+                Click a record in the table below to edit.
+            </div>
+            <div class="container">
+                <table id = "vaccineTable">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Vaccine ID</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Animal ID</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Animal Name</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Last Name</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Vaccine Name</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Vaccine Date</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Number of Doses</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be dynamically generated -->
+                        <tr>
+                            <td colspan="6" class="error-message">Error loading records. Please try again later.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- edit popup modal -->
+        <div id="editModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span id="closeModal" class="close">&times;</span>
+                <h2>Edit Vaccination Record</h2>
+                <form id="editForm">
+                    <p id="animalDetails" style="font-size: 16px; color: #555; margin-bottom: 10px;">
+                        <strong>Editing Record For:</strong> Max (Animal ID: 1)
+                    </p>
+
+                    <label for="vaccineName">Vaccine Name:</label>
+                    <input type="text" id="vaccineName" name="vaccine_name" style="font-size:16px; width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;" required />
+
+                    <label for="vaccineDate">Vaccine Date:</label>
+                    <input type="date" id="vaccineDate" name="vaccine_date" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;" required />
+
+                    <label for="numDoses">Number of Doses:</label>
+                    <input type="number" id="numDoses" name="num_doses" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;" required />
+
+                    <button type="button" id="saveChanges" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Vaccine Record Modal -->
+        <div id="addVaccineModal" class="add-vaccine-modal" style="display: none;">
+            <div class="add-vaccine-modal-content">
+                <span id="closeAddVaccineModal" class="add-vaccine-modal-close">&times;</span>
+                <h2>Add Vaccine Record</h2>
+        
+                <!-- search -->
+                <label for="searchAnimal" style="font-weight: bold;">Search Animal:</label>
+                <input
+                    type="text"
+                    id="searchAnimal"
+                    placeholder="Search by animal name..."
+                    style="width: 97%; padding: 10px; margin-bottom: 10px;"
+                />
+                <div
+                    id="animalList"
+                    style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; margin-bottom: 10px;"
+                >
+                    <!-- JavaScript for search -->
+                </div>
+        
+                <!-- search animal info -->
+                <div
+                    id="selectedAnimalDetails"
+                    style="display: none; padding: 15px; border: 1px solid #007bff; background-color: #f0f8ff; margin-bottom: 15px;"
+                >
+                    <h3 style="color: #007bff; margin-top: 0;">Selected Animal:</h3>
+                    <p><strong>Name:</strong> <span id="animalName"></span></p>
+                    <p><strong>Last Name:</strong> <span id="animalLastName"></span></p>
+                    <p><strong>Species:</strong> <span id="animalSpecies"></span></p>
+                    <p><strong>DOB:</strong> <span id="animalDOB"></span></p>
+                </div>
+        
+                <!-- input vaccination info -->
+                <label for="vaccineNameadd" style="font-weight: bold;">Vaccine Name:</label>
+                <input
+                    type="text"
+                    id="vaccineNameadd"
+                    placeholder="Enter vaccine name"
+                    style="width: 97%; padding: 10px; margin-bottom: 10px;"
+                    required
+                />
+        
+                <label for="vaccineDateadd" style="font-weight: bold;">Vaccine Date:</label>
+                <input
+                    type="date"
+                    id="vaccineDateadd"
+                    style="width: 97%; padding: 10px; margin-bottom: 10px;"
+                    required
+                />
+        
+                <label for="numDosesadd" style="font-weight: bold;">Number of Doses:</label>
+                <input
+                    type="number"
+                    id="numDosesadd"
+                    placeholder="Enter number of doses"
+                    style="width: 97%; padding: 10px; margin-bottom: 10px;"
+                    required
+                />
+        
+                <button
+                    type="button"
+                    id="saveVaccineButton"
+                    style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                >
+                    Save Record
+                </button>
+            </div>
+        </div>
+        
+        
+
+
+    </div>
+    
+    <script>
+        //For return to home button
+        document.getElementById('backToHomeButton').addEventListener('click', () => {
+            // Navigate to the home.html page
+            window.location.href = 'home.html';
+        });
+
+        // Fetch data and populate the vaccine table
+        async function fetchVaccineRecords() {
+            try {
+                const response = await fetch('http://localhost:5000/vaccinations');
+                const data = await response.json();
+
+                const tableBody = document.querySelector("#vaccineTable tbody");
+
+                // Clear any existing rows
+                tableBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    const noRecordsRow = document.createElement('tr');
+                    noRecordsRow.innerHTML = `
+                        <td colspan="7" style="text-align: center; padding: 10px;">No vaccination records found.</td>
+                    `;
+                    tableBody.appendChild(noRecordsRow);
+                    return;
+                }
+
+                // Populate rows for each vaccination record
+                data.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.vaccine_id}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.animal_id}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.animal_name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.last_name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.vaccine_name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.vaccine_date || 'Unknown'}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${record.num_doses || 0}</td>
+                    `;
+
+                    // Add a data attribute for future filtering or actions
+                    row.dataset.vaccine_id = record.vaccine_id.toString();
+                    row.dataset.animal_id = record.animal_id.toString();
+                    row.dataset.animal_name = record.animal_name.toLowerCase();
+                    row.dataset.last_name = record.last_name.toLowerCase();
+                    row.dataset.vaccine_name = record.vaccine_name;
+                    row.dataset.num_doses = record.num_doses.toString();
+                    row.dataset.vaccine_date = record.vaccine_date;
+
+                    // Add a click event to highlight row and perform action
+                    row.addEventListener('click', () => {
+                        document.querySelectorAll('#vaccineTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                        row.classList.add('highlight');
+                        fetchVaccineDetails(record.vaccine_id);
+                    });
+
+                    tableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error fetching vaccination records:', error);
+                const tableBody = document.querySelector("#vaccineTable tbody");
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 10px; color: red;">
+                            Error loading vaccination records. Please try again later.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Fetch details for a specific vaccine (dummy function for demonstration)
+        async function fetchVaccineDetails(vaccine_id) {
+            console.log(`Fetching details for Vaccine ID: ${vaccine_id}`);
+            // You can implement the API call here to fetch detailed information about a specific vaccine.
+        }
+
+        // Trigger the data fetch when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchVaccineRecords();
+            setupVaccineSearchFilter();
+        });
+
+        document.querySelector('#vaccineTable tbody').addEventListener('click', event => {
+            const clickedRow = event.target.closest('tr'); // Get the clicked row
+            if (!clickedRow || !clickedRow.dataset.vaccine_id) return; // Ignore invalid clicks
+
+            const modal = document.getElementById('editModal');
+            const vaccineNameInput = document.getElementById('vaccineName');
+            const vaccineDateInput = document.getElementById('vaccineDate');
+            const numDosesInput = document.getElementById('numDoses');
+
+            // Populate modal fields with the selected row's data
+            vaccineNameInput.value = clickedRow.dataset.vaccine_name;
+            vaccineDateInput.value = clickedRow.dataset.vaccine_date || ''; // Ensure valid date format
+            numDosesInput.value = clickedRow.dataset.num_doses || 0;
+
+            // Show the modal
+            modal.style.display = 'flex';
+
+            // Track the row for later updates
+            currentRow = clickedRow;
+        });
+
+
+        // Setup search functionality for the vaccine table
+        function setupVaccineSearchFilter() {
+            const searchInput = document.getElementById('searchbar'); // Input field for search
+            searchInput.addEventListener('input', () => {
+                const filter = searchInput.value.toLowerCase(); // Convert search term to lowercase for case-insensitive search
+                const rows = document.querySelectorAll('#vaccineTable tbody tr'); // Get all rows in the table
+
+                rows.forEach(row => {
+                    // Check if the search term matches any column value in the row
+                    const matches = row.dataset.vaccine_id.includes(filter) ||
+                                    row.dataset.animal_id.includes(filter) ||
+                                    row.dataset.animal_name.includes(filter) ||
+                                    row.dataset.last_name.includes(filter) ||
+                                    row.dataset.vaccine_name.toLowerCase().includes(filter);
+
+                    // Show or hide the row based on the match
+                    row.style.display = matches ? '' : 'none';
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Reference to modal and form elements
+            const modal = document.getElementById('editModal');
+            const closeModal = document.getElementById('closeModal');
+            const vaccineNameInput = document.getElementById('vaccineName');
+            const vaccineDateInput = document.getElementById('vaccineDate');
+            const numDosesInput = document.getElementById('numDoses');
+            const saveChangesButton = document.getElementById('saveChanges');
+
+            let currentRow; // To track the currently selected row
+
+            // Add click event to table rows
+            const tableRows = document.querySelectorAll('#vaccineTable tbody tr');
+            tableRows.forEach(row => {
+                document.querySelector('#vaccineTable tbody').addEventListener('click', event => {
+                    const clickedRow = event.target.closest('tr'); 
+                    if (!clickedRow || !clickedRow.dataset.vaccine_id) return; 
+
+                    currentRow = clickedRow; 
+
+                    vaccineNameInput.value = currentRow.cells[4].textContent;
+                    vaccineDateInput.value = currentRow.cells[5].textContent;
+                    numDosesInput.value = currentRow.cells[6].textContent;
+
+                    const animalDetails = document.getElementById('animalDetails');
+                    animalDetails.textContent = `Editing Record For: ${currentRow.cells[2].textContent} ${currentRow.cells[3].textContent}`;
+                    
+                    modal.style.display = 'flex';
+                });
+
+            });
+
+            // Close modal
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            // Save changes and update table row
+            saveChangesButton.addEventListener('click', () => {
+                // Update row data with the modified values
+                currentRow.cells[4].textContent = vaccineNameInput.value;
+                currentRow.cells[5].textContent = vaccineDateInput.value;
+                currentRow.cells[6].textContent = numDosesInput.value;
+
+                // Close modal
+                modal.style.display = 'none';
+
+                // Optionally, send updated data to the server via an API call
+                const updatedData = {
+                    vaccine_id: currentRow.cells[0].textContent,
+                    vaccine_name: vaccineNameInput.value,
+                    vaccine_date: vaccineDateInput.value,
+                    num_doses: numDosesInput.value
+                };
+
+                // Example API call (POST or PUT request)
+                fetch(`http://localhost:5000/update-vaccine`, {
+                    method: 'POST', // Change to 'PUT' if necessary
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Update successful:', data);
+                })
+                .catch(error => {
+                    console.error('Error updating vaccine record:', error);
+                });
+            });
+
+            // Close modal when clicking outside of it
+            window.addEventListener('click', event => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('addVaccineModal');
+            const closeModal = document.getElementById('closeAddVaccineModal'); 
+            const addVaccineButton = document.getElementById('addvaccineButton'); 
+
+           
+            addVaccineButton.addEventListener('click', () => {
+                modal.style.display = 'flex'; 
+            });
+
+            
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none'; 
+            });
+
+            
+            window.addEventListener('click', event => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('addVaccineModal');
+            const closeModal = document.getElementById('closeAddVaccineModal');
+            const searchAnimalInput = document.getElementById('searchAnimal');
+            const animalList = document.getElementById('animalList');
+            const selectedAnimalDetails = document.getElementById('selectedAnimalDetails');
+            const animalNameSpan = document.getElementById('animalName');
+            const animalLastNameSpan = document.getElementById('animalLastName');
+            const animalSpeciesSpan = document.getElementById('animalSpecies');
+            const animalDOBSpan = document.getElementById('animalDOB');
+            let selectedAnimal = null;
+
+            
+            document.getElementById('addvaccineButton').addEventListener('click', () => {
+                
+                const modal = document.getElementById('addVaccineModal');
+                modal.style.display = 'flex';
+
+                
+                document.getElementById('searchAnimal').value = '';
+                document.getElementById('vaccineNameadd').value = '';
+                document.getElementById('vaccineDateadd').value = '';
+                document.getElementById('numDosesadd').value = '';
+
+                
+                const animalList = document.getElementById('animalList');
+                const selectedAnimalDetails = document.getElementById('selectedAnimalDetails');
+                animalList.innerHTML = ''; 
+                selectedAnimalDetails.style.display = 'none'; 
+
+                
+                selectedAnimal = null;
+            });
+
+
+            
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+                selectedAnimal = null;
+                animalList.innerHTML = ''; 
+                selectedAnimalDetails.style.display = 'none';
+            });
+
+            
+            searchAnimalInput.addEventListener('input', async () => {
+                const query = searchAnimalInput.value.toLowerCase();
+                if (query.trim() === '') {
+                    animalList.innerHTML = '';
+                    return;
+                }
+
+                
+                const response = await fetch(`http://localhost:5000/search-animal?query=${query}`);
+                const animals = await response.json();
+
+                animalList.innerHTML = '';
+                if (animals.length === 0) {
+                    animalList.innerHTML = `<div>No animals found</div>`;
+                    return;
+                }
+
+                
+                animals.forEach(animal => {
+                    const animalDiv = document.createElement('div');
+                    animalDiv.textContent = `${animal.name} (${animal.species}) - DOB: ${animal.dob}`;
+                    animalDiv.dataset.animalId = animal.id;
+                    animalDiv.addEventListener('click', () => {
+                        selectedAnimal = animal;
+                        searchAnimalInput.value = `${animal.name} (${animal.species})`;
+                        animalList.innerHTML = ''; 
+
+                        
+                        animalNameSpan.textContent = animal.name;
+                        animalLastNameSpan.textContent = animal.last_name;
+                        animalSpeciesSpan.textContent = animal.species;
+                        animalDOBSpan.textContent = animal.dob;
+                        selectedAnimalDetails.style.display = 'block';
+                    });
+
+                    animalList.appendChild(animalDiv);
+                });
+            });
+
+            
+            document.getElementById('saveVaccineButton').addEventListener('click', async () => {
+                if (!selectedAnimal) {
+                    alert('Please select an animal first.');
+                    return;
+                }
+
+                const vaccineName = document.getElementById('vaccineNameadd').value.trim();
+                const vaccineDate = document.getElementById('vaccineDateadd').value.trim();
+                const numDoses = document.getElementById('numDosesadd').value.trim();
+
+                console.log('Vaccine Name:', vaccineName);
+                console.log('Vaccine Date:', vaccineDate);
+                console.log('Number of Doses:', numDoses);
+
+
+                const newRecord = {
+                    animal_id: selectedAnimal.id,
+                    vaccine_name: vaccineName,
+                    vaccine_date: vaccineDate,
+                    num_doses: numDoses
+                };
+
+                
+                const response = await fetch('http://localhost:5000/add-vaccine', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newRecord)
+                });
+
+                if (response.ok) {
+                    alert('Vaccine record added successfully!');
+                    modal.style.display = 'none';
+                    fetchVaccineRecords();
+                } else {
+                    alert('Failed to add vaccine record.');
+                }
+            });
+
+            
+            window.addEventListener('click', event => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>    
+</body>
+</html>
