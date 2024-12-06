@@ -7,73 +7,77 @@
 {% block content %}
 
     <div id="modalOverlay" class="modal-overlay"></div>
-    <div class="medical-container">
-        <div class="medical-header">
-            Medical Records
-        </div>
-
-        <div style="padding: 10px;">
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Search by Animal ID, Symptoms, or Treatment..."
-            />
-        </div>
-
-        <div class="medical-content">
-            <table id="medicalTable">
-                <thead>
-                    <tr>
-                        <th>Medical ID</th>
-                        <th>Animal Name</th>
-                        <th>Symptoms</th>
-                        <th>Treatment</th>
-                        <th>Record Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-        <button id="addMedicalButton">Add Medical Record</button>
-    </div>
-
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            <h2>Add Medical Record</h2>
-            <div class="animal-search-section">
-                <div class="form-group">
-                    <label for="animalSearch">Search Animal:</label>
-                    <input 
-                        type="text" 
-                        id="animalSearch" 
-                        placeholder="Search by name, species, or date of birth..."
-                    >
-                </div>
-                <div id="searchResults" class="search-results">
-                    <!-- Search results will be displayed here -->
-                </div>
+    <div class="board">
+        <button id="backToHomeButton" style="padding: 10px 20px; background-color: #85898d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">
+            Return to Home
+        </button>
+        <div class="medical-container">
+            <div class="medical-header">
+                Medical Records
             </div>
-            <form id="medicalForm">
-                <input type="hidden" id="selectedAnimalId" name="animalId">
-                <div id="selectedAnimalInfo" class="selected-animal-info" style="display: none;">
-                    <!-- Selected animal info will be displayed here -->
-                </div>
-                <div class="form-group">
-                    <label for="symptoms">Symptoms:</label>
-                    <textarea id="symptoms" name="symptoms" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="treatment">Treatment:</label>
-                    <textarea id="treatment" name="treatment" required></textarea>
-                </div>
-                <div class="form-buttons">
-                    <button type="submit">Submit</button>
-                    <button type="button" class="cancel-btn">Cancel</button>
-                </div>
-            </form>
+
+            <div style="padding: 10px;">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search by Animal ID, Symptoms, or Treatment..."
+                />
+            </div>
+
+            <div class="medical-content">
+                <table id="medicalTable">
+                    <thead>
+                        <tr>
+                            <th>Medical ID</th>
+                            <th>Animal Name</th>
+                            <th>Symptoms</th>
+                            <th>Treatment</th>
+                            <th>Record Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <button id="addMedicalButton">Add Medical Record</button>
         </div>
-    </div>
+
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <h2>Add Medical Record</h2>
+                <div class="animal-search-section">
+                    <div class="form-group">
+                        <label for="animalSearch">Search Animal:</label>
+                        <input 
+                            type="text" 
+                            id="animalSearch" 
+                            placeholder="Search by name, species, or date of birth..."
+                        >
+                    </div>
+                    <div id="searchResults" class="search-results">
+                        <!-- Search results will be displayed here -->
+                    </div>
+                </div>
+                <form id="medicalForm">
+                    <input type="hidden" id="selectedAnimalId" name="animalId">
+                    <div id="selectedAnimalInfo" class="selected-animal-info" style="display: none;">
+                        <!-- Selected animal info will be displayed here -->
+                    </div>
+                    <div class="form-group">
+                        <label for="symptoms">Symptoms:</label>
+                        <textarea id="symptoms" name="symptoms" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="treatment">Treatment:</label>
+                        <textarea id="treatment" name="treatment" required></textarea>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit">Submit</button>
+                        <button type="button" class="cancel-btn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
     <div class="medicine-details-container" style="width: 80%; margin: 50px auto;">
         <h2 id="medicineDetailsTitle">Medicine Details</h2>
@@ -116,6 +120,13 @@
 
 {% block scripts %}
     <script>
+
+        //For return to home button
+        document.getElementById('backToHomeButton').addEventListener('click', () => {
+            // Navigate to the home.html page
+            window.location.href = 'home.html';
+        });
+        
         // get the modal
         var modal = document.getElementById("myModal");
         // get the button that opens the modal

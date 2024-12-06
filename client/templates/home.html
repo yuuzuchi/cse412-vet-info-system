@@ -1,37 +1,402 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2 class="logo">Dashboard</h2>
+      <ul class="menu">
+        <li class="active">Home</li>
+        
+        
+        <li><a href="history.html" class="menu-link">History</a></li>
+        <li><a href="medical.html" class="menu-link">Medical</a></li>
+        <li><a href="vaccination.html" class="menu-link">Vaccination</a></li>
+      </ul>
+      <div class="logout">
+        <a href="login.html" class="logout-button">Logout</a>
+      </div>
+    </aside>
 
-{% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-{%endblock%}
-
-{% block content %}
-  <!-- title -->
-  <header class="top-bar">
-    <h1>Home</h1>
-    <p>Welcome, {{ username }}!</p>
-  </header>
-  <!-- main -->
-  <section class="content">
-    <button class="add-animal-button">Add New Animal</button>
-    <div class="header">
-        Animal Records
+    <div id="addAnimalModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2>Add New Animal</h2>
+        <form id="addAnimalForm">
+  
+          <div class="form-section">
+            <h3>Pet Information</h3>
+            <div class="form-group">
+              <label for="petName">Pet Name:</label>
+              <input type="text" id="petName" required>
+            </div>
+            <div class="form-group">
+              <label for="petLastName">Pet Last Name:</label>
+              <input type="text" id="petLastName" required>
+            </div>
+            <div class="form-group">
+              <label for="species">Species:</label>
+              <select id="species" required>
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+                <option value="Bird">Bird</option>
+                <option value="Reptile">Reptile</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dob">Date of Birth:</label>
+              <input type="date" id="dob">
+            </div>
+            <div class="form-group">
+              <label for="breed">Breed:</label>
+              <input type="text" id="breed" required>
+            </div>
+            <div class="form-group">
+              <label for="color">Color:</label>
+              <input type="text" id="color" required>
+            </div>
+          </div>
+  
+          <div class="form-section">
+            <h3>Owner Information</h3>
+            <div class="form-group">
+              <label for="ownerName">Owner Name:</label>
+              <input type="text" id="ownerName">
+            </div>
+            <div class="form-group">
+              <label for="ownerEmail">Owner Email:</label>
+              <input type="email" id="ownerEmail">
+            </div>
+          </div>
+  
+          <div class="button-group">
+            <button type="submit" class="submit-btn">Add Animal</button>
+            <button type="button" class="cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
-    <table id="animalTable" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-family: Arial, sans-serif;">
-        <thead style="background-color: #f4f4f4;">
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 10px;">Animal ID</th>
-                <th style="border: 1px solid #ddd; padding: 10px;">Name</th>
-                <th style="border: 1px solid #ddd; padding: 10px;">Last Name</th>
-                <th style="border: 1px solid #ddd; padding: 10px;">Species</th>
-                <th style="border: 1px solid #ddd; padding: 10px;">Date of Birth</th>
-                <th style="border: 1px solid #ddd; padding: 10px;">Breed</th>
-                <th style="border: 1px solid #ddd; padding: 10px;">Color</th>
-            </tr>
-        </thead>
-    </table>
-  </section>
-{% endblock %}
 
-{% block scripts %}
-  <script src="{{ url_for('static', filename='js/home.js') }}"></script>
-{% endblock %}
+    <div id="editAnimalModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Edit Animal</h2>
+            <form id="editAnimalForm">
+                <div class="form-section">
+                    <h3>Pet Information</h3>
+                    <div class="form-group">
+                        <label for="editPetName">Pet Name:</label>
+                        <input type="text" id="editPetName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPetLastName">Pet Last Name:</label>
+                        <input type="text" id="editPetLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDob">Date of Birth:</label>
+                        <input type="date" id="editDob">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Owner Information</h3>
+                    <div class="form-group">
+                        <label for="editOwnerName">Owner Name:</label>
+                        <input type="text" id="editOwnerName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editOwnerEmail">Owner Email:</label>
+                        <input type="email" id="editOwnerEmail">
+                    </div>
+                </div>
+
+                <input type="hidden" id="editAnimalId">
+                <div class="button-group">
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+      <header class="top-bar">
+        <h1>Home</h1>
+        <!-- TODO: Welcome vet name based on vet_id -->
+        <h3>Welcome, Vet 1</h3>
+      </header>
+      <section class="content">
+        <button class="add-animal-button">Add New Animal</button>
+        <div class="header">
+            Animal Records
+        </div>
+        <table id="animalTable" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-family: Arial, sans-serif;">
+            <thead style="background-color: #f4f4f4;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Animal ID</th>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Name</th>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Last Name</th>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Species</th>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Date of Birth</th>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Breed</th>
+                    <th style="border: 1px solid #ddd; padding: 10px;">Color</th>
+                </tr>
+
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // TODO: Fetch vet_id from storage, change the preset one to seesion
+                fetchAnimalList(1);
+            });
+
+            async function fetchAnimalList(vet_id) {
+                try {
+                    const response = await fetch(`http://localhost:5000/animal-list?vet_id=${vet_id}`);
+                    const data = await response.json();
+
+                    const tableBody = document.querySelector("#animalTable tbody");
+                    tableBody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        const noRecordsRow = document.createElement('tr');
+                        noRecordsRow.innerHTML = `
+                            <td colspan="7" style="text-align: center; padding: 10px;">No records found.</td>
+                        `;
+                        tableBody.appendChild(noRecordsRow);
+                        return;
+                    }
+
+                    data.forEach(animal => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.animal_id}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.name}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.last_name}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.species}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.dob || 'Unknown'}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.breed}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${animal.color}</td>
+                        `;
+                        row.style.cursor = 'pointer';
+                        
+                        row.addEventListener('click', () => {
+                            document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                            row.classList.add('highlight');
+                            openEditModal(animal);
+                        });
+                        
+                        tableBody.appendChild(row);
+                    });
+
+                } catch (error) {
+                    console.error('Error fetching animal list:', error);
+                    const tableBody = document.querySelector("#animalTable tbody");
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 10px; color: red;">
+                                Error loading records. Please try again later.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            //show modal when Add New Animal button is clicked
+            document.querySelector('.add-animal-button').addEventListener('click', () => {
+                document.getElementById('addAnimalModal').style.display = 'block';
+            });
+
+            //hide modal when Cancel button is clicked
+            document.querySelector('.cancel-btn').addEventListener('click', () => {
+                document.getElementById('addAnimalModal').style.display = 'none';
+                document.getElementById('addAnimalForm').reset();
+                document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+            });
+
+            
+            document.getElementById('addAnimalForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const ownerEmail = document.getElementById('ownerEmail').value.trim();
+                const ownerName = document.getElementById('ownerName').value.trim();
+                
+                try {
+                    let owner_id = null;
+                    
+                    //only process owner if both name and email are provided
+                    if (ownerEmail && ownerName) {
+                        //check if owner exists
+                        const ownerResponse = await fetch(`http://localhost:5000/check-owner?email=${encodeURIComponent(ownerEmail)}`);
+                        const ownerData = await ownerResponse.json();
+                        
+                        if (ownerData.exists) {
+                            if (ownerData.name !== ownerName) {
+                                if (!confirm('An owner with this email exists but with a different name. Continue with the existing owner?')) {
+                                    return;
+                                }
+                            }
+                            owner_id = ownerData.owner_id;
+                        } else {
+                            //create new owner
+                            const createOwnerResponse = await fetch('http://localhost:5000/add-owner', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    name: ownerName,
+                                    email: ownerEmail
+                                })
+                            });
+                            const newOwnerData = await createOwnerResponse.json();
+                            owner_id = newOwnerData.owner_id;
+                        }
+                    }
+
+                    //now proceed with adding the animal
+                    const formData = {
+                        name: document.getElementById('petName').value,
+                        last_name: document.getElementById('petLastName').value,
+                        species: document.getElementById('species').value,
+                        dob: document.getElementById('dob').value,
+                        breed: document.getElementById('breed').value,
+                        color: document.getElementById('color').value,
+                        vet_id: 1,
+                        //TODO: vet_id should be session
+                        owner_id: owner_id 
+                    };
+
+                    const response = await fetch('http://localhost:5000/add-animal', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Animal added successfully!');
+                        document.getElementById('addAnimalModal').style.display = 'none';
+                        document.getElementById('addAnimalForm').reset();
+                        document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                        fetchAnimalList(1);
+                        //TODO: Refresh the animal list based on vet_id
+                    } else {
+                        alert(result.error || 'Failed to add animal');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to process the request. Please try again.');
+                }
+            });
+
+            async function openEditModal(animal) {
+                // Fetch owner information if owner_id exists
+                let ownerInfo = { name: '', email_address: '' };
+                if (animal.owner_id) {
+                    try {
+                        const response = await fetch(`http://localhost:5000/owner/${animal.owner_id}`);
+                        ownerInfo = await response.json();
+                    } catch (error) {
+                        console.error('Error fetching owner info:', error);
+                    }
+                }
+
+                document.getElementById('editPetName').value = animal.name;
+                document.getElementById('editPetLastName').value = animal.last_name;
+                document.getElementById('editDob').value = animal.dob || '';
+                document.getElementById('editOwnerName').value = animal.owner_name || '';
+                document.getElementById('editOwnerEmail').value = animal.owner_email || '';
+                document.getElementById('editAnimalId').value = animal.animal_id;
+
+
+                document.getElementById('editAnimalModal').style.display = 'block';
+            }
+
+            document.getElementById('editAnimalForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const animalId = document.getElementById('editAnimalId').value;
+                const ownerEmail = document.getElementById('editOwnerEmail').value.trim();
+                const ownerName = document.getElementById('editOwnerName').value.trim();
+                
+                try {
+                    let owner_id = null;
+                    
+                    if (ownerEmail && ownerName) {
+
+                        const ownerResponse = await fetch(`http://localhost:5000/check-owner?email=${encodeURIComponent(ownerEmail)}`);
+                        const ownerData = await ownerResponse.json();
+                        
+                        if (ownerData.exists) {
+                            if (ownerData.name !== ownerName) {
+                                if (!confirm('An owner with this email exists but with a different name. Continue with the existing owner?')) {
+                                    return;
+                                }
+                            }
+                            owner_id = ownerData.owner_id;
+                        } else {
+
+                            const createOwnerResponse = await fetch('http://localhost:5000/add-owner', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: ownerName, email: ownerEmail })
+                            });
+                            const newOwnerData = await createOwnerResponse.json();
+                            owner_id = newOwnerData.owner_id;
+                        }
+                    }
+
+                    //update animal
+                    const response = await fetch(`http://localhost:5000/update-animal/${animalId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: document.getElementById('editPetName').value,
+                            last_name: document.getElementById('editPetLastName').value,
+                            dob: document.getElementById('editDob').value,
+                            owner_id: owner_id
+                        })
+                    });
+
+                    if (response.ok) {
+                        alert('Animal updated successfully!');
+                        document.getElementById('editAnimalModal').style.display = 'none';
+                        document.getElementById('editAnimalForm').reset();
+                        document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+                        fetchAnimalList(1); //refresh the table
+                        //TODO: vet_id should be session
+                    } else {
+                        const result = await response.json();
+                        alert(result.error || 'Failed to update animal');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to process the request. Please try again.');
+                }
+            });
+
+            // Close edit modal
+            document.querySelector('#editAnimalModal .cancel-btn').addEventListener('click', () => {
+                document.getElementById('editAnimalModal').style.display = 'none';
+                document.getElementById('editAnimalForm').reset();
+                document.querySelectorAll('#animalTable tbody tr').forEach(r => r.classList.remove('highlight'));
+            });
+        </script>
+      </section>
+    </div>
+  </div>
+
+
+  
+</body>
+</html>
