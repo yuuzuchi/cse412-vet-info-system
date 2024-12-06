@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -14,61 +13,7 @@
   .dashboard-container {
     display: flex;
     height: 100vh;
-    overflow: hidden;
-  }
-
-.sidebar {
-    width: 250px;
-    background-color: #2d3748;
-    color: #fff;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  .menu {
-    list-style: none;
-    padding: 0;
-    flex-grow: 1;
-    margin-top: 10px;
-  }
-  
-  .menu li {
-    padding: 15px;
-    margin-bottom: 10px;
-    color: #a0aec0;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: center;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  .menu li:hover,
-  .menu .active {
-    background-color: #4a5568;
-    color: #fff;
-  }
-  
-  .logout {
-    margin-top: auto;
-    text-align: center;
-  }
-  
-  .logout-button {
-    display: block;
-    padding: 10px;
-    margin-top: 20px;
-    background-color: transparent; 
-    color: #fff; 
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  .logout-button:hover {
-    background-color: #e53e3e;
-    color: #fff; 
+    overflow-y: auto;
   }
   
   .main-content {
@@ -123,26 +68,18 @@
     margin-top: 10px;
  }
 
- .menu-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    border-radius: 8px;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  .menu-link:hover {
-    background-color: #4a5568;
-    color: #fff;
-  }
-  
-  .menu .active .menu-link {
-    background-color: #4a5568;
-    color: #fff;
-  }
-
   .add-animal-button {
     padding: 10px 15px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .add-animal-button:hover {
+    background-color: #0056b3;
     
 }
 

@@ -1,16 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaccination Records</title>
-    <link rel="stylesheet" href="vaccination.css">
-</head>
-<body>
+
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vaccination.css') }}">
+{% endblock %}
+
+{% block content %}
     <div class="board">
-        <button id="backToHomeButton" style="padding: 10px 20px; background-color: #85898d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">
-            Return to Home
-        </button>
         <div class="vaccine-container">
             <div class="header">
                 Vaccination Records
@@ -152,19 +148,11 @@
                 </button>
             </div>
         </div>
-        
-        
-
-
     </div>
-    
-    <script>
-        //For return to home button
-        document.getElementById('backToHomeButton').addEventListener('click', () => {
-            // Navigate to the home.html page
-            window.location.href = 'home.html';
-        });
+{% endblock %}
 
+{% block scripts %}
+    <script>
         // Fetch data and populate the vaccine table
         async function fetchVaccineRecords() {
             try {
@@ -521,5 +509,4 @@
             });
         });
     </script>    
-</body>
-</html>
+{% endblock %}

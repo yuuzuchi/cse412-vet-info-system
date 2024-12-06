@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import desc
@@ -6,11 +7,23 @@ from sqlalchemy import desc
 
 app = Flask(__name__)
 CORS(app)
+app.template_folder = '../client/templates'
+app.static_folder = '../client/static'  # Change this to point to static folder
+app.static_url_path = '/static'  # Add this line to define the URL path for static files
+app.secret_key = 'v3ry_s3cr3t_k3y!'
 # Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     'postgresql+psycopg2://doadmin:AVNS_UIvkdQ1sd7yQvtkLK8e@db-postgresql-sfo2-35206-do-user-17895402-0.h.db.ondigitalocean.com:25060/defaultdb?sslmode=require'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize Login Manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+@login_manager.user_loader
+def load_user(vet_id):
+    return Vet.query.get(int(vet_id))
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
@@ -139,13 +152,16 @@ class Vaccination(db.Model):
     animal = db.relationship('Animal', backref='vaccines')
 
 # Define the vet table
-class Vet(db.Model):
+class Vet(UserMixin, db.Model):
     __tablename__ = 'vet'
 
     vet_id = db.Column(db.Integer, primary_key=True)
     role = db.Column(db.String(50), nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    
+    def get_id(self):
+        return str(self.vet_id)
 
 
 #Initial some get all function for check update or view    ⬇︎⬇︎⬇︎⬇︎
@@ -862,6 +878,54 @@ def add_vaccine():
     db.session.commit()
 
     return jsonify({'message': 'Vaccine record added successfully'}), 201
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+        else:
+            username = request.form.get('username')
+            password = request.form.get('password')
+
+        vet = Vet.query.filter_by(username=username).first()
+        if vet and vet.password == password:
+            login_user(vet)
+            return redirect(url_for('home'))
+        else:
+            if request.is_json:
+                return jsonify({'error': 'Invalid username or password'}), 401
+            return render_template('login.html', error='Invalid username or password')
+
+    return render_template('login.html')
+
+@app.route('/logout', methods=['GET'])
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/history_page', methods=['GET'])
+@login_required
+def history_page():
+    return render_template('history.html', active_page='history', vet_id=current_user.vet_id, username=current_user.username)
+
+@app.route('/medical_page', methods=['GET'])
+@login_required
+def medical_page():
+    return render_template('medical.html', active_page='medical', vet_id=current_user.vet_id, username=current_user.username)
+
+@app.route('/vaccination_page', methods=['GET'])
+@login_required
+def vaccination_page():
+    return render_template('vaccination.html', active_page='vaccination', vet_id=current_user.vet_id, username=current_user.username)
+
+@app.route('/', methods=['GET'])
+@app.route('/home', methods=['GET'])
+@login_required
+def home():
+    return render_template('home.html', username=current_user.username, active_page='home', vet_id=current_user.vet_id)
 
 
 
