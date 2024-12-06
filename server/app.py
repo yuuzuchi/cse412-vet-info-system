@@ -130,10 +130,13 @@ class Vaccination(db.Model):
     __tablename__ = 'vaccinations'
 
     vaccine_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    animal_id = db.Column(db.Integer, nullable=False)
+    animal_id = db.Column(db.Integer, db.ForeignKey('animal.animal_id'), nullable=False)
     vaccine_name = db.Column(db.String(100), nullable=True)
     vaccine_date = db.Column(db.Date, nullable=True)
     num_doses = db.Column(db.Integer, nullable=True)
+
+    # join
+    animal = db.relationship('Animal', backref='vaccines')
 
 # Define the vet table
 class Vet(db.Model):
@@ -273,14 +276,30 @@ def getAllOwners():
 
 @app.route('/vaccinations', methods=['GET'])
 def getAllVaccinations():
-    vaccinations = Vaccination.query.order_by(Vaccination.vaccine_id).all()
-    return jsonify([{
-        'Vaccine_id': vaccination.vaccine_id,
-        'Animal_id': vaccination.animal_id,
-        'Vaccine_name': vaccination.vaccine_name,
-        'Vaccine_date': vaccination.vaccine_date,
-        'Num_doses': vaccination.num_doses
-    } for vaccination in vaccinations])
+    results = db.session.query(
+        Vaccination.vaccine_id,
+        Vaccination.animal_id,
+        Animal.name,
+        Animal.last_name,
+        Vaccination.vaccine_name,
+        Vaccination.vaccine_date,
+        Vaccination.num_doses
+    ).join(Animal, Vaccination.animal_id == Animal.animal_id).order_by(Vaccination.vaccine_id).all()
+
+    vaccine_records = [
+        {
+            "vaccine_id": row.vaccine_id,
+            "animal_id": row.animal_id,
+            "animal_name": row.name,
+            "last_name": row.last_name,
+            "vaccine_name": row.vaccine_name,
+            "vaccine_date": row.vaccine_date.strftime('%Y-%m-%d') if row.vaccine_date else None,
+            "num_doses": row.num_doses
+        }
+        for row in results
+    ]
+
+    return jsonify(vaccine_records)
 
 @app.route('/vets', methods=['GET'])
 def getAllvets():
@@ -679,6 +698,46 @@ def edit_history():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/update-vaccine', methods=['POST'])
+def update_vaccine():
+    data = request.json
+    vaccine_id = data.get('vaccine_id')
+    vaccine_name = data.get('vaccine_name')
+    vaccine_date = data.get('vaccine_date')
+    num_doses = data.get('num_doses')
+
+    # Update vaccine in the database
+    vaccine = Vaccination.query.get(vaccine_id)
+    if vaccine:
+        vaccine.vaccine_name = vaccine_name
+        vaccine.vaccine_date = vaccine_date
+        vaccine.num_doses = num_doses
+        db.session.commit()
+        return jsonify({"message": "Vaccine record updated successfully"}), 200
+    else:
+        return jsonify({"message": "Vaccine record not found"}), 404
+
+
+@app.route('/search-animal', methods=['GET'])
+def search_animal():
+    query = request.args.get('query', '').lower()
+    if not query:
+        return jsonify([]) 
+
+    animals = Animal.query.filter(Animal.name.ilike(f'%{query}%')).all()
+
+    results = [
+        {
+            'id': animal.animal_id,
+            'name': animal.name,
+            'last_name': animal.last_name,
+            'species': animal.species,
+            'dob': animal.dob.strftime('%Y-%m-%d') if animal.dob else None
+        }
+        for animal in animals
+    ]
+    return jsonify(results)
+
 @app.route('/check-owner', methods=['GET'])
 def check_owner():
     email = request.args.get('email')
@@ -773,7 +832,36 @@ def get_owner(owner_id):
         "email_address": owner.email_address
     })
 
+    results = [
+        {
+            'id': animal.animal_id,
+            'name': animal.name,
+            'last_name': animal.last_name,
+            'species': animal.species,
+            'dob': animal.dob.strftime('%Y-%m-%d') if animal.dob else None
+        }
+        for animal in animals
+    ]
+    return jsonify(results)
 
+@app.route('/add-vaccine', methods=['POST'])
+def add_vaccine():
+    data = request.get_json()  
+    print(data)
+    if not data.get('animal_id') or not data.get('vaccine_name') or not data.get('vaccine_date') or not data.get('num_doses'):
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    new_vaccine = Vaccination(
+        animal_id=data['animal_id'],
+        vaccine_name=data['vaccine_name'],
+        vaccine_date=data['vaccine_date'],
+        num_doses=data['num_doses']
+    )
+
+    db.session.add(new_vaccine)
+    db.session.commit()
+
+    return jsonify({'message': 'Vaccine record added successfully'}), 201
 
 
 
