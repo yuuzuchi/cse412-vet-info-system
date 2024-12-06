@@ -80,6 +80,12 @@ input:focus {
     background-color: #4a5568;
 }
 
+.login-guide {
+    color: #4a5568;
+    font-size: 14px;
+    text-align: center;
+}
+
 /* Error message styling */
 .error-message {
     color: #e53e3e;
