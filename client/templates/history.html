@@ -116,6 +116,8 @@
 
 {% block scripts %}
 <script>
+    // retrieve vet_id from window
+    const vet_id = {{vet_id}};
     // Global functions for case handling
     function setupCaseTable(data, species) {
         const caseTableBody = document.querySelector("#caseTable tbody");
@@ -150,11 +152,12 @@
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
-        fetchAnimalList(1);
+        fetchAnimalList();
+        setupSearchFilter();
     });
 
     // Fetch data and populate the table
-    async function fetchAnimalList(vet_id = 1) {
+    async function fetchAnimalList() {
         try {
             const response = await fetch(`http://localhost:5000/animal-list?vet_id=${vet_id}`);
             const data = await response.json();
@@ -357,7 +360,7 @@
 
         // Set hidden animal_id and vet_id fields
         document.getElementById('addHistoryForm').dataset.animal_id = animalId; // Dynamic assignment
-        document.getElementById('addHistoryForm').dataset.vet_id = 1; // Example vet_id
+        document.getElementById('addHistoryForm').dataset.vet_id = vet_id; 
     });
 
     // Handle form submission
@@ -374,7 +377,7 @@
         const data = Object.fromEntries(formData.entries());
         const species = selectedRow.dataset.species;
         data.animal_id = selectedRow.dataset.animal_id;
-        data.vet_id = 1;
+        data.vet_id = vet_id;
 
         console.log('Submitting data:', { ...data, species }); // Debug log
 
@@ -639,7 +642,7 @@
         updatedData.case_id = modalContent.dataset.case_id;
         const species = document.querySelector('.highlight').dataset.species;
         updatedData.animal_id = document.querySelector('.highlight').dataset.animal_id;
-        updatedData.vet_id = 1;
+        updatedData.vet_id = vet_id;
         // Send updated data to the server
         try {
             const response = await fetch('http://localhost:5000/update-history', {

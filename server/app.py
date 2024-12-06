@@ -909,22 +909,22 @@ def logout():
 @app.route('/history_page', methods=['GET'])
 @login_required
 def history_page():
-    return render_template('history.html', active_page='history')
+    return render_template('history.html', active_page='history', vet_id=current_user.vet_id, username=current_user.username)
 
 @app.route('/medical_page', methods=['GET'])
 @login_required
 def medical_page():
-    return render_template('medical.html')
+    return render_template('medical.html', active_page='medical', vet_id=current_user.vet_id, username=current_user.username)
 
 @app.route('/vaccination_page', methods=['GET'])
 @login_required
 def vaccination_page():
-    return render_template('vaccination.html')
+    return render_template('vaccination.html', active_page='vaccination', vet_id=current_user.vet_id, username=current_user.username)
 
 @app.route('/home', methods=['GET'])
 @login_required
 def home():
-    return render_template('home.html', username=current_user.username, active_page='home')
+    return render_template('home.html', username=current_user.username, active_page='home', vet_id=current_user.vet_id)
 
 
 if __name__ == '__main__':
