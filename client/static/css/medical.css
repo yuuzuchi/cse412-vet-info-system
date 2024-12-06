@@ -59,8 +59,7 @@ tr:hover {
     background-color: white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    width: 97%;
-    margin: 20px auto;
+    width: 100%;
     border: 1px solid #ccc;
     border-radius: 8px;
 }
@@ -78,16 +77,28 @@ tr:hover {
     margin-bottom: 1rem;
     margin-left: 1rem;
     margin-top: 1rem;
-    width: 10%;
+    width: 15%;
     height: 2rem;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0px 20px;
 }
 
 #addMedicineButton {
     margin-bottom: 1rem;
     margin-left: 0.5rem;
     margin-top: 1rem;
-    width: 10%;
+    width: 15%;
     height: 2rem;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0px 20px;
 }
 
 .board {

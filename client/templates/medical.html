@@ -5,12 +5,8 @@
 {% endblock %}
 
 {% block content %}
-
     <div id="modalOverlay" class="modal-overlay"></div>
     <div class="board">
-        <button id="backToHomeButton" style="padding: 10px 20px; background-color: #85898d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">
-            Return to Home
-        </button>
         <div class="medical-container">
             <div class="medical-header">
                 Medical Records
@@ -79,22 +75,22 @@
             </div>
         </div>
 
-    <div class="medicine-details-container" style="width: 80%; margin: 50px auto;">
-        <h2 id="medicineDetailsTitle">Medicine Details</h2>
-        <table id="medicineTable" style="display: none; width: 100%;">
-            <thead>
-                <tr>
-                    <th>Medicine ID</th>
-                    <th>Medicine Name</th>
-                    <th>Doses</th>
-                    <th>Date Issued</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-        <button id="addMedicineButton" style="display: none; width: 100%; margin-top: 10px;">Add Medicine Record</button>
-    </div>
+        <div class="medicine-details-container">
+            <h2 id="medicineDetailsTitle">Medicine Details</h2>
+            <table id="medicineTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Medicine ID</th>
+                        <th>Medicine Name</th>
+                        <th>Doses</th>
+                        <th>Date Issued</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <button id="addMedicineButton" style="display: none;">Add Medicine Record</button>
+        </div>
 
     <div id="medicineModal" class="modal">
         <div class="modal-content">
@@ -119,14 +115,7 @@
 {% endblock %}
 
 {% block scripts %}
-    <script>
-
-        //For return to home button
-        document.getElementById('backToHomeButton').addEventListener('click', () => {
-            // Navigate to the home.html page
-            window.location.href = 'home.html';
-        });
-        
+    <script>        
         // get the modal
         var modal = document.getElementById("myModal");
         // get the button that opens the modal
