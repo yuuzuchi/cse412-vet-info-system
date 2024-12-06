@@ -921,10 +921,12 @@ def medical_page():
 def vaccination_page():
     return render_template('vaccination.html', active_page='vaccination', vet_id=current_user.vet_id, username=current_user.username)
 
+@app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 @login_required
 def home():
     return render_template('home.html', username=current_user.username, active_page='home', vet_id=current_user.vet_id)
+
 
 
 if __name__ == '__main__':
