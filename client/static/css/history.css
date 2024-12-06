@@ -30,7 +30,7 @@ body {
 }
 
 .history-content {
-    max-height: 200px;
+    max-height: 400px;
     overflow-y: auto;
     padding: 20px;
 }

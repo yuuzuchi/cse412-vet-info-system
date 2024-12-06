@@ -13,7 +13,7 @@ app.static_url_path = '/static'  # Add this line to define the URL path for stat
 app.secret_key = 'v3ry_s3cr3t_k3y!'
 # Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    'postgresql+psycopg2://doadmin:AVNS_UIvkdQ1sd7yQvtkLK8e@db-postgresql-sfo2-35206-do-user-17895402-0.h.db.ondigitalocean.com:25060/defaultdb?sslmode=require'
+    #Todo
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
