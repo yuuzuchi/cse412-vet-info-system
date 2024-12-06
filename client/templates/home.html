@@ -1,55 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home</title>
-  <link rel="stylesheet" href="home.css">
-</head>
-<body>
-  <div class="dashboard-container">
-    <!-- Left -->
-    <aside class="sidebar">
-      <h2 class="logo">Dashboard</h2>
-      <ul class="menu">
-        <li class="active">Home</li>
-        <li><a href="history.html" class="menu-link">History</a></li>
-        <li><a href="medical.html" class="menu-link">Medical</a></li>
-        <li><a href="vaccination.html" class="menu-link">Vaccination</a></li>
-      </ul>
-      <div class="logout">
-        <a href="login.html" class="logout-button">Logout</a>
-      </div>
-    </aside>
+{% extends "base.html" %}
 
-    <!-- Right -->
-    <div class="main-content">
-      <!-- title -->
-      <header class="top-bar">
-        <h1>Home</h1>
-      </header>
-      <!-- main -->
-      <section class="content">
-        <button class="add-animal-button">Add New Animal</button>
-        <div class="header">
-            Animal Records
-        </div>
-        <table id="animalTable" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-family: Arial, sans-serif;">
-            <thead style="background-color: #f4f4f4;">
-                <tr>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Animal ID</th>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Name</th>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Last Name</th>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Species</th>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Date of Birth</th>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Breed</th>
-                    <th style="border: 1px solid #ddd; padding: 10px;">Color</th>
-                </tr>
-            </thead>
-        </table>
-        </section>
-      </section>
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{%endblock%}
+
+{% block content %}
+  <!-- title -->
+  <header class="top-bar">
+    <h1>Home</h1>
+    <p>Welcome, {{ username }}!</p>
+  </header>
+  <!-- main -->
+  <section class="content">
+    <button class="add-animal-button">Add New Animal</button>
+    <div class="header">
+        Animal Records
     </div>
-  </div>
-</body>
-</html>
+    <table id="animalTable" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-family: Arial, sans-serif;">
+        <thead style="background-color: #f4f4f4;">
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 10px;">Animal ID</th>
+                <th style="border: 1px solid #ddd; padding: 10px;">Name</th>
+                <th style="border: 1px solid #ddd; padding: 10px;">Last Name</th>
+                <th style="border: 1px solid #ddd; padding: 10px;">Species</th>
+                <th style="border: 1px solid #ddd; padding: 10px;">Date of Birth</th>
+                <th style="border: 1px solid #ddd; padding: 10px;">Breed</th>
+                <th style="border: 1px solid #ddd; padding: 10px;">Color</th>
+            </tr>
+        </thead>
+    </table>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}

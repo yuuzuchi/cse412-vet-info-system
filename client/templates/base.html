@@ -1,0 +1,38 @@
+<!-- Template including the left sidebar-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2 class="logo">Dashboard</h2>
+            <ul class="menu">
+                <li {% if active_page == 'home' %}class="active"{% endif %}>
+                    <a href="{{ url_for('home') }}" class="menu-link">Home</a>
+                </li>
+                <li {% if active_page == 'history' %}class="active"{% endif %}>
+                    <a href="{{ url_for('history_page') }}" class="menu-link">History</a>
+                </li>
+                <li {% if active_page == 'medical' %}class="active"{% endif %}>
+                    <a href="{{ url_for('medical_page') }}" class="menu-link">Medical</a>
+                </li>
+                <li {% if active_page == 'vaccination' %}class="active"{% endif %}>
+                    <a href="{{ url_for('vaccination_page') }}" class="menu-link">Vaccination</a>
+                </li>
+            </ul>
+            <div class="logout">
+                <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
