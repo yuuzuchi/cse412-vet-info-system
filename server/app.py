@@ -13,7 +13,7 @@ app.static_url_path = '/static'  # Add this line to define the URL path for stat
 app.secret_key = 'v3ry_s3cr3t_k3y!'
 # Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    #Todo
+    #TODO: databse link here
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -257,16 +257,16 @@ def getAllMedicals():
         Medical.symptoms,
         Medical.treatment,
         Medical.record_date,
-        Animal.name.label('animal_name')  # Join with Animal table to get the name
+        Animal.name.label('animal_name')
     ).join(Animal, Medical.animal_id == Animal.animal_id).order_by(Medical.medical_id).all()
 
     return jsonify([{
         'Medical_id': medical.medical_id,
         'Animal_id': medical.animal_id,
-        'Animal_name': medical.animal_name,  # Include animal name in the response
+        'Animal_name': medical.animal_name,
         'Symptoms': medical.symptoms,
         'Treatment': medical.treatment,
-        'Record_date': medical.record_date
+        'Record_date': medical.record_date.strftime('%Y-%m-%d') if medical.record_date else None
     } for medical in medicals])
 
 @app.route('/medicines', methods=['GET'])
@@ -278,7 +278,7 @@ def getAllMedicines():
         'Animal_id': medicine.animal_id,
         'Medicine_name': medicine.medicine_name,
         'Doses': medicine.doses,
-        'Date_issue': medicine.date_issue
+        'Date_issue': medicine.date_issue.strftime('%Y-%m-%d') if medicine.date_issue else None
     } for medicine in medicines])
 
 @app.route('/owners', methods=['GET'])
@@ -384,7 +384,7 @@ def get_history():
         return jsonify([{
             'Case_id': case.case_id,
             'Animal_id': case.animal_id,
-            'Date_visit': case.date_visit,
+            'Date_visit': case.date_visit.strftime('%Y-%m-%d') if case.date_visit else None,
             'Reason_visit': case.reason_visit
         } for case in cases])
 
